@@ -178,13 +178,37 @@ display:none;
 
 <div id="toast" class="toast"></div><script>
 
-const SUPABASE_URL="YOUR_URL"
-const SUPABASE_KEY="YOUR_KEY"
+const SUPABASE_URL="https://xlxqtkoitnffmotkoaoo.supabase.co"
+const SUPABASE_KEY="sb_publishable_B-E6VOIQXVs2G3qj_UdJPw_MS3TM_i6"
 
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
+async function loadRestaurant(){
+
+  if(!slug){
+    showToast("Invalid restaurant")
+    return
+  }
+
+  const {data,error} = await supabase
+  .from("restaurants")
+  .select("*")
+  .eq("slug", slug)
+  .single()
+
+  if(error){
+    showToast("Restaurant not found")
+    return
+  }
+
+  restaurant_id = data.id
+  restaurantName.innerText = data.name
+
+}
+
 const params=new URLSearchParams(location.search)
-const restaurant_id=params.get("restaurant")||"demo"
+const slug = params.get("slug")
+let restaurant_id = null
 const table_number=params.get("table")||"1"
 
 restaurantName.innerText="Restaurant"
@@ -233,7 +257,7 @@ renderMenu()
 
 function renderMenu(){
 
-const search=searchInput?.value?.toLowerCase()||""
+const search=document.getElementById("search").value.toLowerCase()||""
 
 menu.innerHTML=dishes
 .filter(d=>activeCat=="all"||d.category==activeCat)
@@ -292,7 +316,8 @@ const {data:order}=await supabase
 .insert({
 restaurant_id,
 table_number,
-status:"pending"
+status:"pending",
+order_type:"dinein"
 })
 .select()
 .single()
@@ -330,7 +355,12 @@ showToast("Waiter called")
 
 search.addEventListener("input",renderMenu)
 
-loadDishes()
+async function init(){
+  await loadRestaurant()
+  loadDishes()
+}
+
+init()
 
 </script></body>
 </html>
