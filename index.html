@@ -183,33 +183,32 @@ const SUPABASE_KEY="sb_publishable_B-E6VOIQXVs2G3qj_UdJPw_MS3TM_i6"
 
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-async function loadRestaurant(){
+const params=new URLSearchParams(location.search)
+const slug = params.get("slug")
+let restaurant_id = null
+const table_number=params.get("table")||"1"
 
-  if(!slug){
-    showToast("Invalid restaurant")
-    return
-  }
+async function loadRestaurant() {
 
-  const {data,error} = await supabase
-  .from("restaurants")
-  .select("*")
-  .eq("slug", slug)
-  .single()
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select("*")
+    .eq("slug", slug)
+    .single()
 
-  if(error){
+  if (error || !data) {
     showToast("Restaurant not found")
     return
   }
 
   restaurant_id = data.id
   restaurantName.innerText = data.name
+  tableNumber.innerText = table_number
 
+  loadDishes()
 }
 
-const params=new URLSearchParams(location.search)
-const slug = params.get("slug")
-let restaurant_id = null
-const table_number=params.get("table")||"1"
+
 
 restaurantName.innerText="Restaurant"
 tableNumber.innerText=table_number
@@ -355,12 +354,7 @@ showToast("Waiter called")
 
 search.addEventListener("input",renderMenu)
 
-async function init(){
-  await loadRestaurant()
-  loadDishes()
-}
-
-init()
+loadRestaurant()
 
 </script></body>
 </html>
