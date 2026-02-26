@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kitchen Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  background:#0f172a;
+  font-family:Poppins, sans-serif;
+  color:white;
+  padding:20px;
+}
+
+h2{
+  margin-bottom:20px;
+}
+
+.order-card{
+  background:#1f2937;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.5);
+}
+
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  background:#22c55e;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:10px;
+}
+
+.logout{
+  background:#ef4444;
+  margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<h2>👨‍🍳 Kitchen Panel</h2>
+
+<div id="ordersContainer">Loading...</div>
+
+<button class="logout" onclick="logout()">Logout</button>
+
+<script>
+
+const SUPABASE_URL = "https://nauqzjzbmlzdnnryzdan.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ypvRXwLPQbokKid4nGi8AA_dITP8eca"; // replace
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const role = localStorage.getItem("role");
+const restaurant_id = localStorage.getItem("restaurant_id");
+
+if(!role || !restaurant_id){
+  window.location.href = "login.html";
+}
+
+// Only kitchen allowed
+if(role !== "kitchen"){
+  alert("Access denied");
+  window.location.href = "login.html";
+}
+
+async function loadKitchenOrders(){
+
+  const { data: orders, error } = await sb
+    .from("orders")
+    .select("*")
+    .eq("restaurant_id", restaurant_id)
+    .in("status",["pending","preparing"])
+    .order("created_at",{ascending:false});
+
+  const box = document.getElementById("ordersContainer");
+  box.innerHTML="";
+
+  if(error || !orders || orders.length === 0){
+    box.innerHTML="No active kitchen orders";
+    return;
+  }
+
+  orders.forEach(o=>{
+
+    box.innerHTML += `
+      <div class="order-card">
+        <b>Table:</b> ${o.table_number || "Online"}<br>
+        <b>Type:</b> ${o.order_type}<br>
+        <b>Status:</b> ${o.status}<br>
+        <b>Total:</b> ₹${o.total_amount}<br>
+
+        <button onclick="markReady('${o.id}')">
+          Mark Ready
+        </button>
+      </div>
+    `;
+
+  });
+
+}
+
+async function markReady(id){
+
+  await sb
+    .from("orders")
+    .update({status:"served"})
+    .eq("id",id);
+
+  loadKitchenOrders();
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  localStorage.clear();
+  window.location.href="login.html";
+}
+
+// Auto load
+loadKitchenOrders();
+
+/* ===== REALTIME ===== */
+
+const kitchenChannel = sb.channel('orders-realtime-kitchen');
+
+kitchenChannel
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'orders'
+    },
+    (payload) => {
+
+      if(payload.new.restaurant_id !== restaurant_id) return;
+
+      loadKitchenOrders();
+
+    }
+  )
+  .subscribe();
+
+</script>
+
+</body>
+</html>

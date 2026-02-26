@@ -1,360 +1,215 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Restaurant Menu</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
-:root{
---bg1:#0D001A;
---bg2:#1A0030;
---accent1:#FF006E;
---accent2:#00D4FF;
---glass:rgba(255,255,255,0.06);
-}
 
-*{box-sizing:border-box;font-family:Poppins,sans-serif}
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<style>
 body{
-margin:0;
-color:#fff;
-background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  background: linear-gradient(135deg,#0D001A,#1A0030,#000D1A);
+  font-family: Poppins, sans-serif;
 }
-
-header{
-padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-background:rgba(0,0,0,.3);
-backdrop-filter:blur(10px);
-position:sticky;
-top:0;
+.glass{
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  border:1px solid rgba(255,105,180,0.2);
 }
-
-.gradient{
-background:linear-gradient(90deg,var(--accent1),var(--accent2));
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
+.btn-grad{
+  background: linear-gradient(135deg,#FF006E,#8B00FF);
 }
+</style>
+</head>
+<body class="text-white">
 
-.container{
-padding:15px;
-max-width:900px;
-margin:auto;
-}
+<div class="max-w-lg mx-auto p-4">
 
-.search{
-width:100%;
-padding:12px;
-border-radius:12px;
-border:1px solid rgba(255,255,255,.2);
-background:var(--glass);
-color:#fff;
-}
-
-.categories{
-display:flex;
-gap:10px;
-overflow:auto;
-padding:10px 0;
-}
-
-.cat{
-padding:8px 14px;
-border-radius:20px;
-background:var(--glass);
-cursor:pointer;
-white-space:nowrap;
-}
-
-.cat.active{
-background:linear-gradient(90deg,var(--accent1),var(--accent2));
-}
-
-.card{
-display:flex;
-justify-content:space-between;
-background:var(--glass);
-padding:12px;
-border-radius:14px;
-margin-bottom:10px;
-align-items:center;
-}
-
-.card img{
-width:70px;
-height:70px;
-border-radius:10px;
-object-fit:cover;
-}
-
-.btn{
-padding:6px 12px;
-border:none;
-border-radius:10px;
-background:linear-gradient(90deg,var(--accent1),var(--accent2));
-color:#fff;
-cursor:pointer;
-}
-
-.btn:disabled{
-background:#555;
-cursor:not-allowed;
-}
-
-.cart-btn{
-position:fixed;
-bottom:15px;
-left:15px;
-right:15px;
-padding:15px;
-border-radius:14px;
-border:none;
-background:linear-gradient(90deg,var(--accent1),var(--accent2));
-color:#fff;
-font-size:16px;
-display:none;
-}
-
-.cart-panel{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:#111;
-padding:15px;
-transform:translateY(100%);
-transition:.3s;
-max-height:70%;
-overflow:auto;
-}
-
-.cart-panel.open{
-transform:translateY(0);
-}
-
-.out{
-opacity:.4;
-}
-
-.waiter{
-position:fixed;
-right:15px;
-bottom:80px;
-padding:12px;
-border-radius:50%;
-border:none;
-background:linear-gradient(90deg,#22c55e,#00D4FF);
-color:#fff;
-font-size:20px;
-}
-
-.toast{
-position:fixed;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-background:#000;
-padding:10px 15px;
-border-radius:10px;
-display:none;
-}
-
-</style></head>
-<body><header>
-<div>
-<div id="restaurantName">Restaurant</div>
-<div style="font-size:12px;opacity:.7">Table <span id="tableNumber"></span></div>
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-4">
+  <div>
+    <h1 id="restaurantName" class="font-bold text-lg"></h1>
+    <p id="tableInfo" class="text-sm opacity-70"></p>
+  </div>
 </div>
-<div class="gradient">Menu</div>
-</header><div class="container"><input id="search" class="search" placeholder="Search dishes"><div id="categories" class="categories"></div><div id="menu"></div></div><button id="cartBtn" class="cart-btn" onclick="toggleCart()">Cart ₹0</button>
 
-<div id="cartPanel" class="cart-panel">
-<h3>Cart</h3>
-<div id="cartItems"></div>
-<button class="btn" onclick="checkout()">Place Order</button>
-</div><button class="waiter" onclick="callWaiter()">🔔</button>
+<!-- ORDER TYPE -->
+<div class="flex gap-2 mb-4">
+  <button id="dineBtn" class="flex-1 py-2 rounded-xl btn-grad">🍽 Dine In</button>
+  <button id="onlineBtn" class="flex-1 py-2 rounded-xl glass">🛵 Online</button>
+</div>
 
-<div id="toast" class="toast"></div><script>
+<!-- SEARCH -->
+<input id="searchInput" type="text" placeholder="Search..." 
+class="w-full p-3 rounded-xl glass mb-4">
 
-const SUPABASE_URL="https://xlxqtkoitnffmotkoaoo.supabase.co"
-const SUPABASE_KEY="sb_publishable_B-E6VOIQXVs2G3qj_UdJPw_MS3TM_i6"
+<!-- CATEGORIES -->
+<div id="categories" class="flex gap-3 overflow-x-auto mb-4"></div>
 
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+<!-- MENU -->
+<div id="menu" class="grid grid-cols-2 gap-3"></div>
 
-const params=new URLSearchParams(location.search)
-const slug = params.get("slug")
-let restaurant_id = null
-const table_number=params.get("table")||"1"
+<!-- CART BUTTON -->
+<button id="cartBtn" 
+class="fixed bottom-6 right-6 w-14 h-14 rounded-full btn-grad hidden">
+🛒
+</button>
 
-async function loadRestaurant() {
+</div>
 
-  const { data, error } = await supabase
-    .from("restaurants")
-    .select("*")
-    .eq("slug", slug)
-    .single()
+<script>
 
-  if (error || !data) {
-    showToast("Restaurant not found")
-    return
+// SUPABASE
+const SUPABASE_URL = "https://nauqzjzbmlzdnnryzdan.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ypvRXwLPQbokKid4nGi8AA_dITP8eca";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// STATE
+let restaurant = null;
+let categories = [];
+let menuItems = [];
+let cart = [];
+let orderType = "dine_in";
+let currentCategory = "all";
+let slug = new URLSearchParams(window.location.search).get("slug");
+
+// INIT
+init();
+
+async function init(){
+  if(!slug){
+    document.body.innerHTML="<h2 class='text-center mt-20'>Invalid Restaurant</h2>";
+    return;
   }
 
-  restaurant_id = data.id
-  restaurantName.innerText = data.name
-  tableNumber.innerText = table_number
+  const {data:rest} = await supabase
+    .from("restaurants")
+    .select("*")
+    .eq("slug",slug)
+    .single();
 
-  loadDishes()
+  restaurant = rest;
+  document.getElementById("restaurantName").innerText = rest.name;
+
+  loadCategories();
+  loadMenu();
 }
 
+async function loadCategories(){
+  const {data} = await supabase
+    .from("categories")
+    .select("*")
+    .eq("restaurant_id",restaurant.id)
+    .order("sort_order");
 
-
-restaurantName.innerText="Restaurant"
-tableNumber.innerText=table_number
-
-let dishes=[]
-let cart=[]
-let activeCat="all"
-
-function showToast(msg){
-toast.innerText=msg
-toast.style.display="block"
-setTimeout(()=>toast.style.display="none",3000)
+  categories = data;
+  renderCategories();
 }
 
-async function loadDishes(){
+async function loadMenu(){
+  const {data} = await supabase
+    .from("menu_items")
+    .select("*")
+    .eq("restaurant_id",restaurant.id)
+    .eq("is_available",true);
 
-const {data}=await supabase
-.from("dishes")
-.select("*")
-.eq("restaurant_id",restaurant_id)
-
-if(!data)return
-
- dishes=data
- renderCategories()
- renderMenu()
-
+  menuItems = data;
+  renderMenu();
 }
 
 function renderCategories(){
+  const div = document.getElementById("categories");
+  div.innerHTML = `
+  <button onclick="selectCategory('all')" 
+  class="px-4 py-2 rounded-full glass">All</button>
+  `;
 
-const cats=["all",...new Set(dishes.map(d=>d.category))]
-
-categories.innerHTML=cats.map(c=>`
-<div class="cat ${activeCat==c?'active':''}" onclick="selectCat('${c}')">${c}</div>
-`).join("")
-
+  categories.forEach(c=>{
+    div.innerHTML += `
+    <button onclick="selectCategory('${c.id}')" 
+    class="px-4 py-2 rounded-full glass">
+    ${c.emoji || "🍽"} ${c.name}
+    </button>
+    `;
+  });
 }
 
-function selectCat(c){
-activeCat=c
-renderCategories()
-renderMenu()
+function selectCategory(id){
+  currentCategory=id;
+  renderMenu();
 }
 
 function renderMenu(){
+  const div = document.getElementById("menu");
+  let filtered = menuItems;
 
-const search=document.getElementById("search").value.toLowerCase()||""
+  if(currentCategory!=="all"){
+    filtered = filtered.filter(m=>m.category_id==currentCategory);
+  }
 
-menu.innerHTML=dishes
-.filter(d=>activeCat=="all"||d.category==activeCat)
-.filter(d=>d.name.toLowerCase().includes(search))
-.map(d=>`
-<div class="card ${!d.available?'out':''}">
-<div>
-<div>${d.name}</div>
-<div>₹${d.price}</div>
-${!d.available?"<div style='color:red'>Out of stock</div>":""}
-</div>
-<img src="${d.image||'https://via.placeholder.com/70'}">
-<button class="btn" ${!d.available?'disabled':''} onclick="addCart('${d.id}')">Add</button>
-</div>
-`).join("")
-
+  div.innerHTML="";
+  filtered.forEach(item=>{
+    div.innerHTML+=`
+    <div class="glass rounded-xl p-2">
+      <img src="${item.image_url}" class="rounded-xl h-28 w-full object-cover">
+      <h4 class="mt-2 font-semibold text-sm">${item.name}</h4>
+      <p class="text-xs opacity-60">${item.description||""}</p>
+      <div class="flex justify-between items-center mt-2">
+        <span>₹${item.price}</span>
+        <button onclick="addToCart('${item.id}','${item.name}',${item.price})"
+        class="btn-grad px-3 py-1 rounded-lg text-xs">ADD</button>
+      </div>
+    </div>
+    `;
+  });
 }
 
-function addCart(id){
-
-const item=dishes.find(d=>d.id==id)
-
-const existing=cart.find(c=>c.id==id)
-
-if(existing)existing.qty++
-else cart.push({id,name:item.name,price:item.price,qty:1})
-
-updateCart()
-showToast("Added")
-
+function addToCart(id,name,price){
+  const existing = cart.find(c=>c.id==id);
+  if(existing){
+    existing.qty++;
+  }else{
+    cart.push({id,name,price,qty:1});
+  }
+  document.getElementById("cartBtn").classList.remove("hidden");
 }
 
-function updateCart(){
-
-const total=cart.reduce((s,i)=>s+i.price*i.qty,0)
-
-cartBtn.style.display=cart.length?"block":"none"
-cartBtn.innerText="Cart ₹"+total
-
-cartItems.innerHTML=cart.map(i=>`
-<div>
-${i.name} x${i.qty} ₹${i.price*i.qty}
-</div>
-`).join("")
-
-}
-
-function toggleCart(){
-cartPanel.classList.toggle("open")
-}
+document.getElementById("cartBtn").onclick = checkout;
 
 async function checkout(){
 
-const {data:order}=await supabase
-.from("orders")
-.insert({
-restaurant_id,
-table_number,
-status:"pending",
-order_type:"dinein"
-})
-.select()
-.single()
+  if(cart.length==0) return;
 
-for(const i of cart){
+  const total = cart.reduce((sum,i)=>sum+(i.price*i.qty),0);
 
-await supabase
-.from("order_items")
-.insert({
-order_id:order.id,
-dish_id:i.id,
-qty:i.qty,
-price:i.price,
-restaurant_id
-})
+  const {data:order} = await supabase
+    .from("orders")
+    .insert({
+      restaurant_id: restaurant.id,
+      order_type: orderType,
+      table_number: "Table 7",
+      total_amount: total,
+      status: "pending"
+    })
+    .select()
+    .single();
 
+  for(const item of cart){
+    await supabase.from("order_items").insert({
+      order_id: order.id,
+      menu_item_id: item.id,
+      quantity: item.qty,
+      price: item.price
+    });
+  }
+
+  alert("Order Placed!");
+  cart=[];
+  document.getElementById("cartBtn").classList.add("hidden");
 }
 
-cart=[]
-updateCart()
-toggleCart()
-showToast("Order placed")
-
-}
-
-async function callWaiter(){
-
-await supabase
-.from("waiter_calls")
-.insert({restaurant_id,table_number})
-
-showToast("Waiter called")
-
-}
-
-search.addEventListener("input",renderMenu)
-
-loadRestaurant()
-
-</script></body>
+</script>
+</body>
 </html>

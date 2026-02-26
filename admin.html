@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP Admin Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Poppins, sans-serif;
+  background:#0f172a;
+  color:white;
+  display:flex;
+}
+
+.sidebar{
+  width:240px;
+  height:100vh;
+  background:#111827;
+  padding:20px;
+  box-sizing:border-box;
+}
+
+.sidebar h2{
+  margin-bottom:30px;
+}
+
+.sidebar button{
+  width:100%;
+  margin-bottom:10px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#1f2937;
+  color:white;
+  cursor:pointer;
+  text-align:left;
+}
+
+.sidebar button:hover{
+  background:#374151;
+}
+
+.main{
+  flex:1;
+  padding:30px;
+}
+
+.card{
+  background:linear-gradient(145deg,#1e293b,#172033);
+  padding:25px;
+  border-radius:20px;
+  margin-bottom:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+.logout{
+  margin-top:30px;
+  background:#ef4444 !important;
+}
+.hidden{
+  display:none;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>ERP Panel</h2>
+
+  <button onclick="showSection('dashboard')">Dashboard</button>
+  <button onclick="showSection('orders')">Orders</button>
+  <button onclick="showSection('menu')">Menu</button>
+  <button id="staffBtn" onclick="showSection('staff')">Staff</button>
+  <button id="reportsBtn" onclick="showSection('reports')">Reports</button>
+
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+
+  <div id="dashboardSection" class="card">
+    <h3>Dashboard</h3>
+    <p>Welcome to ERP Admin</p>
+  </div>
+
+  <div id="ordersSection" class="card hidden">
+  <h3>Live Orders</h3>
+  <div id="ordersContainer">Loading...</div>
+</div>
+
+  <div id="menuSection" class="card hidden">
+    <h3>Menu Management</h3>
+    <p>Add / Edit dishes here</p>
+  </div>
+
+  <div id="staffSection" class="card hidden">
+  <h3>👥 Staff Management</h3>
+
+  <input id="staffName" placeholder="Name"><br><br>
+  <input id="staffEmail" placeholder="Email"><br><br>
+  <input id="staffPassword" placeholder="Temporary Password"><br><br>
+
+  <select id="staffRole">
+    <option value="manager">Manager</option>
+    <option value="cashier">Cashier</option>
+    <option value="kitchen">Kitchen</option>
+    <option value="waiter">Waiter</option>
+  </select><br><br>
+
+  <button onclick="createStaff()">Create Staff</button>
+
+  <hr><br>
+
+  <h4>All Staff</h4>
+  <div id="staffList"></div>
+</div>
+
+  <div id="reportsSection" class="card hidden">
+    <h3>Reports</h3>
+    <p>Revenue & analytics</p>
+  </div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL = "https://nauqzjzbmlzdnnryzdan.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ypvRXwLPQbokKid4nGi8AA_dITP8eca"; // replace
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ===== PROTECTION ===== */
+
+const role = localStorage.getItem("role");
+const restaurant_id = localStorage.getItem("restaurant_id");
+
+if(!role || !restaurant_id){
+  window.location.href = "login.html";
+}
+
+// Block kitchen & cashier from admin
+if(role === "kitchen" || role === "cashier"){
+  alert("Access denied");
+  window.location.href = "login.html";
+}
+
+/* ===== ROLE BASED UI CONTROL ===== */
+
+if(role === "manager"){
+  document.getElementById("staffBtn").classList.add("hidden");
+  document.getElementById("reportsBtn").classList.add("hidden");
+}
+
+/* ===== SECTION SWITCH ===== */
+
+function showSection(name){
+
+  document.querySelectorAll(".card").forEach(c=>{
+    c.classList.add("hidden");
+  });
+
+  document.getElementById(name+"Section").classList.remove("hidden");
+}
+
+/* ===== LOGOUT ===== */
+
+async function logout(){
+  await sb.auth.signOut();
+  localStorage.clear();
+  window.location.href="login.html";
+}
+
+
+
+/* ===== LOAD ORDERS ===== */
+
+async function loadOrders(){
+
+  const { data: orders, error } = await sb
+    .from("orders")
+    .select("*")
+    .eq("restaurant_id", restaurant_id)
+    .order("created_at", { ascending:false });
+
+  const box = document.getElementById("ordersContainer");
+  box.innerHTML="";
+
+  if(error || !orders || orders.length === 0){
+    box.innerHTML="No orders found";
+    return;
+  }
+
+  orders.forEach(o=>{
+
+    box.innerHTML += `
+      <div style="background:#1f2937;padding:15px;border-radius:15px;margin-bottom:15px;">
+        <b>Table:</b> ${o.table_number || "Online"}<br>
+        <b>Type:</b> ${o.order_type}<br>
+        <b>Status:</b> ${o.status}<br>
+        <b>Total:</b> ₹${o.total_amount}<br><br>
+
+        ${getActionButtons(o)}
+
+      </div>
+    `;
+
+  });
+
+}
+
+/* ===== ROLE BASED BUTTONS ===== */
+
+function getActionButtons(order){
+
+  if(role === "manager"){
+    return `
+      <button onclick="updateStatus('${order.id}','preparing')">Preparing</button>
+      <button onclick="updateStatus('${order.id}','served')">Served</button>
+      <button onclick="updateStatus('${order.id}','completed')">Completed</button>
+    `;
+  }
+
+  if(role === "owner"){
+    return `
+      <button onclick="updateStatus('${order.id}','preparing')">Preparing</button>
+      <button onclick="updateStatus('${order.id}','served')">Served</button>
+      <button onclick="updateStatus('${order.id}','completed')">Completed</button>
+      <button onclick="updateStatus('${order.id}','billed')">Billed</button>
+    `;
+  }
+
+  return ""; // no buttons
+}
+
+/* ===== UPDATE STATUS ===== */
+
+async function updateStatus(id,status){
+
+  await sb
+    .from("orders")
+    .update({status})
+    .eq("id",id);
+
+  loadOrders();
+}
+
+/* ===== AUTO LOAD WHEN OPEN ===== */
+
+document.querySelector("button[onclick=\"showSection('orders')\"]")
+  .addEventListener("click", ()=>{
+    loadOrders();
+  });
+
+
+
+  /* ===== REALTIME ORDERS ===== */
+
+const orderChannel = sb.channel('orders-realtime-admin');
+
+orderChannel
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'orders'
+    },
+    (payload) => {
+
+      if(payload.new.restaurant_id !== restaurant_id) return;
+
+      console.log("Realtime Update:", payload);
+
+      if(document.getElementById("ordersSection").classList.contains("hidden") === false){
+        loadOrders();
+      }
+
+    }
+  )
+  .subscribe();
+
+
+
+  /* ===== CREATE STAFF ===== */
+
+async function createStaff(){
+
+  if(role !== "owner"){
+    alert("Only owner can create staff");
+    return;
+  }
+
+  const name = document.getElementById("staffName").value.trim();
+  const email = document.getElementById("staffEmail").value.trim().toLowerCase();
+  const password = document.getElementById("staffPassword").value.trim();
+  const staffRole = document.getElementById("staffRole").value;
+
+  if(!name || !email || !password){
+    alert("Fill all fields");
+    return;
+  }
+
+  // Create Supabase Auth user
+  const { data: authData, error: authError } = await sb.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true
+  });
+
+  if(authError){
+    alert("Auth creation failed");
+    console.log(authError);
+    return;
+  }
+
+  // Insert into users table
+  await sb.from("users").insert([{
+    restaurant_id: restaurant_id,
+    name,
+    email,
+    role: staffRole
+  }]);
+
+  alert("Staff created successfully");
+
+  loadStaff();
+}
+
+/* ===== LOAD STAFF ===== */
+
+async function loadStaff(){
+
+  const { data: staff } = await sb
+    .from("users")
+    .select("*")
+    .eq("restaurant_id", restaurant_id);
+
+  const box = document.getElementById("staffList");
+  box.innerHTML="";
+
+  if(!staff || staff.length===0){
+    box.innerHTML="No staff found";
+    return;
+  }
+
+  staff.forEach(s=>{
+
+    box.innerHTML += `
+      <div style="background:#1f2937;padding:10px;border-radius:10px;margin-bottom:10px;">
+        <b>${s.name}</b> (${s.role})<br>
+        ${s.email}<br>
+        Status: ${s.is_active ? "Active" : "Inactive"}
+        <br>
+        <button onclick="toggleStaff('${s.id}',${s.is_active})">
+          ${s.is_active ? "Deactivate" : "Activate"}
+        </button>
+      </div>
+    `;
+
+  });
+
+}
+
+/* ===== ACTIVATE / DEACTIVATE ===== */
+
+async function toggleStaff(id,currentStatus){
+
+  if(role !== "owner"){
+    alert("Only owner allowed");
+    return;
+  }
+
+  await sb
+    .from("users")
+    .update({is_active: !currentStatus})
+    .eq("id",id);
+
+  loadStaff();
+}
+
+/* ===== LOAD STAFF WHEN OPEN ===== */
+
+document.getElementById("staffBtn")
+  .addEventListener("click",()=>{
+    loadStaff();
+  });
+</script>
+
+</body>
+</html>
