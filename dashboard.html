@@ -1,527 +1,937 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Admin Dashboard</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <style>
-:root{
---bg-primary:linear-gradient(135deg,#0D001A 0%,#1A0030 50%,#000D1A 100%);
---pink-hot:#FF006E;
---blue-electric:#00D4FF;
---purple-mid:#8B00FF;
---card-glass:rgba(255,255,255,0.06);
---card-border:rgba(255,105,180,0.2);
-}
-
 body{
-margin:0;
-font-family:'Poppins',sans-serif;
-background:var(--bg-primary);
-color:white;
+  font-family:'Poppins',sans-serif;
+  background:#0f172a;
+  color:#fff;
+  margin:0;
+  padding:20px;
 }
 
-.glass-card{
-background:var(--card-glass);
-border:1px solid var(--card-border);
-backdrop-filter:blur(20px);
-border-radius:16px;
+h2{margin-bottom:20px;}
+
+.card{
+  background:linear-gradient(145deg,#1e293b,#172033);
+  padding:24px;
+  border-radius:20px;
+  margin:18px 0;
+  border:1px solid rgba(255,255,255,0.05);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
 }
 
-.btn-gradient{
-background:linear-gradient(135deg,var(--pink-hot),var(--purple-mid));
+button{
+  padding:10px 18px;
+  border:none;
+  border-radius:25px;
+  cursor:pointer;
+  font-weight:600;
+  background:linear-gradient(45deg,#ff4ecd,#4e73ff);
+  color:#fff;
+  margin:6px 6px 0 0;
+  transition:.3s;
 }
 
-.section{
-display:none;
+button:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
 
-.section.active{
-display:block;
+input{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #334155;
+  background:#1e293b;
+  color:#fff;
+  width:100%;
+  max-width:250px;
+  margin:5px 5px 0 0;
+}
+
+#stats{
+  display:flex;
+  gap:15px;
+  margin-bottom:25px;
+  flex-wrap:wrap;
 }
 
 .stat-card{
-background:linear-gradient(135deg,rgba(255,0,110,0.15),rgba(0,212,255,0.15));
-border:1px solid rgba(255,105,180,0.3);
+  flex:1;
+  min-width:150px;
+  padding:25px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#1e293b,#172033);
+  border:1px solid rgba(255,255,255,0.05);
+  box-shadow:0 15px 40px rgba(0,0,0,0.5);
+  text-align:center;
 }
+
+.stat-card h2{
+  font-size:30px;
+  margin:0;
+}
+
+.stat-card p{
+  margin-top:8px;
+  font-size:14px;
+  color:#94a3b8;
+}
+
+#modules{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  margin-bottom:25px;
+}
+
+.module-btn{
+  background:linear-gradient(145deg,#1e293b,#172033);
+  padding:30px;
+  border-radius:20px;
+  text-align:center;
+  cursor:pointer;
+  border:1px solid rgba(255,255,255,0.05);
+  transition:.3s;
+  font-weight:600;
+  font-size:16px;
+}
+
+.module-btn:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 40px rgba(0,0,0,0.6);
+}
+
+.module-btn:hover{
+  background:#243046;
+}
+
+.section{
+  display:none;
+  margin-top: 40px;
+}
+
+.new-badge{
+  background:#ef4444;
+  color:#fff;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  margin-left:10px;
+  animation:blink 1s infinite;
+}
+
+@keyframes blink{
+  0%{opacity:1;}
+  50%{opacity:0.3;}
+  100%{opacity:1;}
+}
+
+/* ===== NOTIFICATION TOAST ===== */
+#toast-container{
+  position:fixed;
+  top:20px;
+  right:20px;
+  z-index:9999;
+}
+
+.toast{
+  padding:14px 18px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:600;
+  margin-bottom:10px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.3);
+  animation:slideIn .3s ease;
+}
+
+
+
+
+@keyframes slideIn{
+  from{transform:translateX(100%);opacity:0;}
+  to{transform:translateX(0);opacity:1;}
+}
+
+
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.logo{
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:0.5px;
+}
+
+.live-indicator{
+  background:#0f1f17;
+  color:#22c55e;
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:13px;
+  border:1px solid #22c55e33;
+}
+
+.status-pending{color:#f97316;font-weight:600;}
+.status-preparing{color:#eab308;font-weight:600;
+}
+.status-served{color:#3b82f6;font-weight:600;}
+.status-completed{color:#22c55e;font-weight:600;
+}
+.status-billed{color:#a855f7;font-weight:600;}
 </style>
+
 </head>
-
 <body>
+  <!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
 
-<header class="p-4 border-b border-pink-500/30 backdrop-blur-lg">
-<div class="flex justify-between items-center max-w-6xl mx-auto">
-<h1 class="text-xl font-semibold">🚀 Admin Dashboard</h1>
-<div id="restaurantName" class="text-sm text-white/60"></div>
+<div class="topbar">
+  <div class="logo">
+    🍴 <span>Restaurant Admin</span>
+  </div>
+  <div class="live-indicator">
+    ● Live
+  </div>
 </div>
-</header>
 
-<div class="flex max-w-6xl mx-auto">
+<div id="stats"></div>
 
-<!-- SIDEBAR -->
-<aside class="w-60 p-4 border-r border-pink-500/20 hidden md:block">
-<button onclick="showSection('ordersSection')" class="w-full mb-2 p-2 glass-card">Live Orders</button>
-<button onclick="showSection('billingSection')" class="w-full mb-2 p-2 glass-card">Billing</button>
-<button onclick="showSection('menuSection')" class="w-full mb-2 p-2 glass-card">Menu Management</button>
-<button onclick="showSection('revenueSection')" class="w-full mb-2 p-2 glass-card">Revenue</button>
-<button onclick="showSection('historySection')" class="w-full mb-2 p-2 glass-card">Order History</button>
-</aside>
-
-<main class="flex-1 p-6">
-
-<!-- STATS -->
-<div class="grid md:grid-cols-3 gap-4 mb-6">
-<div class="stat-card p-4 rounded-xl">
-<p class="text-sm text-white/60">Today's Orders</p>
-<h2 id="todayOrders" class="text-2xl font-bold">0</h2>
-</div>
-<div class="stat-card p-4 rounded-xl">
-<p class="text-sm text-white/60">Today's Revenue</p>
-<h2 id="todayRevenue" class="text-2xl font-bold">₹0</h2>
-</div>
-<div class="stat-card p-4 rounded-xl">
-<p class="text-sm text-white/60">Pending Orders</p>
-<h2 id="pendingCount" class="text-2xl font-bold">0</h2>
+<div id="modules">
+  <div class="module-btn" onclick="showSection('trackOrders')">📦 Track Orders</div>
+  <div class="module-btn" onclick="showSection('orderManagement')">📊 Order Management</div>
+  <div class="module-btn" onclick="showSection('manageDashboard')">🍽 Manage Dishes</div>
+  <div class="module-btn" onclick="showSection('generateBill')">
+  🧾 Generate Bill
 </div>
 </div>
 
-<!-- LIVE ORDERS -->
-<section id="ordersSection" class="section active">
-<h2 class="text-lg font-semibold mb-4">Live Orders</h2>
-<div id="liveOrders" class="grid md:grid-cols-2 gap-4"></div>
-</section>
+<!-- TRACK -->
+<div id="trackOrders" class="section">
+  <h3>🛒 Live Orders</h3>
+  <div id="orders"></div>
 
-<!-- BILLING -->
-<section id="billingSection" class="section">
-<h2 class="text-lg font-semibold mb-4">Generate Bill</h2>
-<input id="billTableNumber" placeholder="Enter Table Number" class="p-2 bg-white/10 rounded mb-3">
-<button onclick="generateBill()" class="btn-gradient p-2 rounded">Generate</button>
-<div id="billPreview" class="mt-4"></div>
-</section>
-
-<!-- MENU MANAGEMENT -->
-<section id="menuSection" class="section">
-<h2 class="text-lg font-semibold mb-4">Menu Management</h2>
-
-<div class="glass-card p-4 mb-4">
-<input id="newCategory" placeholder="New Category Name" class="p-2 bg-white/10 rounded">
-<button onclick="addCategory()" class="btn-gradient p-2 rounded ml-2">Add Category</button>
+  <h3>🔔 Waiter Calls</h3>
+  <div id="waiters"></div>
 </div>
 
-<div class="glass-card p-4 mb-4">
-<input id="dishName" placeholder="Dish Name" class="p-2 bg-white/10 rounded mb-2 w-full">
-<input id="dishPrice" placeholder="Price" type="number" class="p-2 bg-white/10 rounded mb-2 w-full">
-<input id="dishImage" placeholder="Image URL" class="p-2 bg-white/10 rounded mb-2 w-full">
-<select id="dishCategory" class="p-2 bg-white/10 rounded mb-2 w-full"></select>
-<button onclick="addDish()" class="btn-gradient p-2 rounded w-full">Add Dish</button>
+<!-- ORDER MANAGEMENT -->
+<div id="orderManagement" class="section">
+  <h3>📊 Today Orders</h3>
+  <button onclick="downloadTodayReport()">Download Today Report</button>
+  <div id="orders"></div>
 </div>
 
-<div id="menuList"></div>
+<!-- MANAGE DASHBOARD -->
+<div id="manageDashboard" class="section">
+  <h3>➕ Add Dish</h3>
+  <input id="name" placeholder="Name">
+  <input id="price" type="number" placeholder="Price">
+  <input id="category" placeholder="Category">
+  <input id="image" placeholder="Image URL">
+  <button onclick="saveDish()">Save</button>
 
-</section>
+  <h3 style="margin-top:30px;">📋 All Dishes</h3>
+  <div id="dishes"></div>
+</div>
 
-<!-- REVENUE -->
-<section id="revenueSection" class="section">
-<h2 class="text-lg font-semibold mb-4">Revenue Analytics</h2>
+<!-- GENERATE BILL SECTION -->
+<div id="generateBill" class="section">
+  <h3>🧾 Generate Bill</h3>
 
-<select id="revenueFilter" onchange="loadRevenue()" class="p-2 bg-white/10 rounded mb-3">
-<option value="today">Today</option>
-<option value="week">This Week</option>
-<option value="month">This Month</option>
-</select>
+  <input id="billTableNumber" placeholder="Enter Table Number">
+  <button onclick="generateCompletedBill()">Generate Bill</button>
 
-<div id="revenueData"></div>
-</section>
-
-<!-- HISTORY -->
-<section id="historySection" class="section">
-<h2 class="text-lg font-semibold mb-4">Order History</h2>
-
-<input type="date" id="historyDate" onchange="loadHistory()" class="p-2 bg-white/10 rounded mb-3">
-<div id="historyList"></div>
-
-</section>
-
-</main>
+  <div id="billResult" style="margin-top:20px;"></div>
 </div>
 
 <script>
+const SUPABASE_URL = "https://azmzjibyyprombrreqmf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_yQqSAx25nwqoax6S-LPxCw_Wt6zLT5G";
 
-// ⚠️ Replace with your keys
-const SUPABASE_URL="YOUR_SUPABASE_URL";
-const SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY";
 
-const sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+async function loadRestaurantId() {
 
-let restaurantId=null;
-let slug=null;
+  if (!restaurantSlug) {
+    alert("No restaurant selected in URL");
+    return;
+  }
 
+  const { data, error } = await sb
+    .from("restaurants")
+    .select("id")
+    .eq("slug", restaurantSlug)
+    .single();
+
+  if (error || !data) {
+    alert("Restaurant not found");
+    console.log(error);
+    return;
+  }
+
+  RESTAURANT_ID = data.id;
+
+  console.log("Restaurant Loaded:", RESTAURANT_ID);
+
+  loadOrders();
+  loadWaiters();
+  loadDishes();
+}
+
+let RESTAURANT_ID = null;
+
+const params = new URLSearchParams(window.location.search);
+let restaurantSlug = params.get("slug");
+
+// Agar URL me slug nahi mila to localStorage se lo
+if (!restaurantSlug) {
+  restaurantSlug = localStorage.getItem("restaurantSlug");
+}
+
+// Agar slug mil gaya to save kar do
+if (restaurantSlug) {
+  localStorage.setItem("restaurantSlug", restaurantSlug);
+} else {
+  alert("No restaurant selected");
+}
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+let CURRENT_BILL_ORDERS = [];
+
+/* ===== TOAST FUNCTION ===== */
+function showToast(message,color){
+  const container=document.getElementById("toast-container");
+  const toast=document.createElement("div");
+  toast.className="toast";
+  toast.style.background=color;
+  toast.innerText=message;
+  container.appendChild(toast);
+  setTimeout(()=>{toast.remove();},4000);
+}
+
+// ===== SOUND SYSTEM =====
+const orderSound = new Audio("notification.mpeg");
+const waiterSound = new Audio("waiter.mpeg");
+
+function playOrderSound(){
+  orderSound.currentTime = 0;
+  orderSound.play().catch(()=>{});
+}
+
+function playWaiterSound(){
+  waiterSound.currentTime = 0;
+  waiterSound.play().catch(()=>{});
+}
+/* ===== SECTION SWITCH ===== */
 function showSection(id){
-document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
 }
 
-// URL detect
-const params=new URLSearchParams(window.location.search);
-slug=params.get("slug");
+/* ===== ORDERS ===== */
+async function loadOrders(){
+  const today = new Date();
+today.setHours(0,0,0,0); // raat 12 se start
 
-async function initDashboard(){
+const { data: orders } = await sb.from("orders")
+.select("*")
+.eq("restaurant_id", RESTAURANT_ID)
+.gte("created_at", today.toISOString())
+.order("created_at", { ascending: false });
 
-if(!slug){
-alert("Missing slug");
-return;
+  const box=document.getElementById("orders");
+  box.innerHTML="";
+  if(!orders||orders.length===0){box.innerHTML="No orders";return;}
+
+  const {data:allDishes}=await sb.from("dishes").select("id,name");
+
+  for(let o of orders){
+    let itemsHTML="";
+    if(o.items){
+      for(let item of o.items){
+        const dish=allDishes.find(d=>d.id===item.id);
+        if(dish) itemsHTML+=dish.name+" × "+item.quantity+"<br>";
+      }
+    }
+
+    box.innerHTML+=`
+  <div class="card">
+    <b>
+Table ${o.table_number}
+${o.status === "pending" ? '<span class="new-badge">NEW</span>' : ''}
+</b><br>
+
+    ${itemsHTML}
+
+    <br>Status: <span class="status-${o.status}">${o.status}</span>
+    <br>Total: ₹${o.total_amount}<br>
+
+   ${o.status === "billed"
+? `
+<span style="color:#a855f7;font-weight:700;">
+✅ Billed
+</span>
+`
+: `
+<button onclick="updateStatus('${o.id}','preparing')">
+Preparing
+</button>
+
+<button onclick="updateStatus('${o.id}','served')">
+Served
+</button>
+
+${o.status !== "completed"
+? `
+<button onclick="updateStatus('${o.id}','completed')">
+Completed
+</button>
+`
+: `
+<span style="color:#22c55e;font-weight:700;">
+✅ Ready for Billing
+</span>
+`
+}
+`
 }
 
-const {data}=await sb.from("restaurants").select("*").eq("slug",slug).single();
-restaurantId=data.id;
-document.getElementById("restaurantName").innerText=data.name;
+  </div>
+`;
+  }
 
-loadStats();
-loadLiveOrders();
-loadCategories();
-loadMenuList();
+  loadStats();
 }
 
+async function updateStatus(id,status){
+
+  const { data } = await sb
+    .from("orders")
+    .select("status")
+    .eq("id", id)
+    .single();
+
+  if(data.status === "billed"){
+    alert("Already billed. Cannot change.");
+    return;
+  }
+
+  await sb
+    .from("orders")
+    .update({status})
+    .eq("id",id);
+
+  loadOrders();
+}
+
+/* ===== STATS ===== */
 async function loadStats(){
+  const today=new Date();
+  today.setHours(0,0,0,0);
 
-// Today's orders
+  const {data:orders}=await sb.from("orders")
+    .select("*")
+    .eq("restaurant_id",RESTAURANT_ID)
+    .gte("created_at",today.toISOString());
+
+  if(!orders)return;
+
+  let revenue=0,pending=0,completed=0;
+  orders.forEach(o=>{
+    revenue+=o.total_amount;
+    if(o.status==="completed") completed++;
+else if(o.status==="pending" || o.status==="preparing" || o.status==="served") pending++;
+  });
+
+  document.getElementById("stats").innerHTML=`
+  <div class="stat-card">
+    <h2>₹${revenue}</h2>
+    <p>Revenue Today</p>
+  </div>
+
+  <div class="stat-card">
+    <h2>${orders.length}</h2>
+    <p>Total Orders</p>
+  </div>
+
+  <div class="stat-card">
+    <h2>${completed}</h2>
+    <p>Completed</p>
+  </div>
+
+  <div class="stat-card">
+    <h2>${pending}</h2>
+    <p>Active Orders</p>
+  </div>
+`;
+}
+
+/* ===== WAITER ===== */
+async function loadWaiters(){
+  const {data}=await sb.from("waiter_calls")
+  .select("*")
+  .eq("restaurant_id",RESTAURANT_ID)
+  .eq("status","pending");
+
+  const box=document.getElementById("waiters");
+  box.innerHTML="";
+  if(!data||data.length===0){box.innerHTML="No waiter calls";return;}
+
+  for(let w of data){
+    box.innerHTML+=`
+      <div class="card">
+        Table ${w.table_number}
+        <button onclick="doneWaiter('${w.id}')">Done</button>
+      </div>
+    `;
+  }
+}
+
+async function doneWaiter(id){
+  await sb.from("waiter_calls").update({status:"served"}).eq("id",id);
+  loadWaiters();
+}
+
+/* ===== DISHES ===== */
+async function loadDishes(){
+  const {data}=await sb.from("dishes")
+  .select("*")
+  .eq("restaurant_id",RESTAURANT_ID);
+
+  const box=document.getElementById("dishes");
+  box.innerHTML="";
+  if(!data)return;
+
+  for(let d of data){
+    box.innerHTML+=`
+      <div class="card">
+        <b>${d.name}</b> ₹${d.price}
+        ${d.is_available === false 
+          ? '<span style="color:#ef4444;font-weight:600;margin-left:10px;">(Unavailable)</span>' 
+          : ''}
+
+        <br><br>
+
+        <button onclick="editDish('${d.id}')">Edit</button>
+        <button onclick="deleteDish('${d.id}')">Delete</button>
+
+        <button onclick="toggleAvailability('${d.id}', ${d.is_available})"
+        style="background:${d.is_available ? '#ef4444' : '#22c55e'}">
+        ${d.is_available ? 'Mark Unavailable' : 'Mark Available'}
+        </button>
+      </div>
+    `;
+  }
+}
+
+function editDish(id){
+  sb.from("dishes").select("*").eq("id",id).single()
+  .then(res=>{
+    const d=res.data;
+    document.getElementById("name").value=d.name;
+    document.getElementById("price").value=d.price;
+    document.getElementById("category").value=d.category;
+    document.getElementById("image").value=d.image;
+    editingId=id;
+  });
+}
+
+async function toggleAvailability(id,currentStatus){
+  const { error } = await sb
+    .from("dishes")
+    .update({ is_available: !currentStatus })
+    .eq("id", id);
+
+  if(error){
+    alert("Update failed");
+    console.log(error);
+    return;
+  }
+
+  loadDishes();
+}
+
+async function saveDish(){
+  const name=document.getElementById("name").value;
+  const price=parseFloat(document.getElementById("price").value);
+  const category=document.getElementById("category").value;
+  const image=document.getElementById("image").value;
+
+  if(!name||isNaN(price)){alert("Name & Price required");return;}
+
+  if(editingId){
+    await sb.from("dishes")
+    .update({name,price,category,image}).eq("id",editingId);
+    editingId=null;
+    alert("Dish Updated Successfully ✅");
+  }else{
+    await sb.from("dishes")
+.insert([{
+  restaurant_id:RESTAURANT_ID,
+  name,
+  price,
+  category,
+  image,
+  is_available:true
+}]);
+    alert("Dish Added Successfully ✅");
+  }
+
+  document.getElementById("name").value="";
+  document.getElementById("price").value="";
+  document.getElementById("category").value="";
+  document.getElementById("image").value="";
+
+  loadDishes();
+}
+
+async function deleteDish(id){
+  const confirmDelete=confirm("Delete this dish?");
+  if(!confirmDelete) return;
+
+  await sb.from("dishes").delete().eq("id",id);
+  alert("Dish Deleted Successfully ❌");
+  loadDishes();
+}
+
+/* ===== INIT ===== */
+showSection('trackOrders');
+loadRestaurantId();
+
+
+async function downloadTodayReport(){
+
+  try {
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+   const { data: orders, error } = await sb
+  .from("orders")
+  .select("*")
+  .eq("restaurant_id", RESTAURANT_ID)
+  .gte("created_at", today.toISOString())
+  .order("created_at", { ascending: true });
+
+    if(error){
+      console.error(error);
+      alert("Error loading orders");
+      return;
+    }
+
+    if(!orders || orders.length === 0){
+      alert("No orders today");
+      return;
+    }
+
+    const { data: allDishes } = await sb
+      .from("dishes")
+      .select("id,name");
+
+    let csv = "Table,Items,Status,Total,Date\n";
+    let grandTotal = 0;
+
+    orders.forEach(o => {
+
+      let itemsText = "";
+
+      if(o.items && Array.isArray(o.items)){
+        itemsText = o.items.map(item=>{
+          const dish = allDishes.find(d=>d.id===item.id);
+          return dish ? dish.name + " x" + item.quantity : "";
+        }).join(" | ");
+      }
+grandTotal += o.total_amount;
+      const formattedDate = new Date(o.created_at)
+        .toLocaleString("en-IN");
+
+      csv += o.table_number + "," +
+             '"' + itemsText + '",' +
+             o.status + "," +
+             o.total_amount + "," +
+             '"' + formattedDate + '"' +
+             "\n";
+
+    });
+
+    csv += "\n";
+csv += "-----------------------------\n";
+csv += "Grand Total,,," + grandTotal + "\n";
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "today_orders.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+  } catch(err) {
+    console.error(err);
+    alert("Something went wrong");
+  }
+}
+
+
+// ===== REALTIME ORDERS =====
+
+const channel = sb.channel('orders-realtime');
+
+channel
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'orders'
+    },
+    (payload) => {
+
+  if(payload.new.restaurant_id !== RESTAURANT_ID) return;
+
+  console.log("🔥 NEW ORDER:", payload);
+  showToast("🔥 New Order Received!","#22c55e");
+  playOrderSound();
+  loadOrders();
+}
+  )
+  .subscribe((status) => {
+    console.log("📡 Status:", status);
+  });
+
+
+ // ===== WAITER CALLS REALTIME =====
+
+const waiterChannel = sb.channel('waiter-calls-realtime');
+
+waiterChannel
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'waiter_calls'
+    },
+   (payload) => {
+
+  if(payload.new.restaurant_id !== RESTAURANT_ID) return;
+
+  console.log("🔔 WAITER EVENT:", payload);
+  showToast("🔔 Waiter Called!","#f97316");
+  playWaiterSound();
+  loadWaiters();
+}
+  )
+  .subscribe((status) => {
+    console.log("🛰 WAITER STATUS:", status);
+  });
+
+async function generateCompletedBill(){
+
+  const tableNumber = document.getElementById("billTableNumber").value;
+
+  if(!tableNumber){
+    alert("Enter table number");
+    return;
+  }
 const today = new Date();
 today.setHours(0,0,0,0);
 
-const {data:todayOrdersData} = await sb
-.from("orders")
-.select("*")
-.eq("restaurant_id",restaurantId)
-.gte("created_at",today.toISOString());
+const { data: orders } = await sb
+  .from("orders")
+  .select("*")
+  .eq("restaurant_id", RESTAURANT_ID)
+  .eq("table_number", tableNumber)
+  .eq("status","completed")
+  .gte("created_at", today.toISOString());
+  
 
-document.getElementById("todayOrders").innerText = todayOrdersData.length;
+  if(!orders || orders.length === 0){
+    document.getElementById("billResult").innerHTML =
+      "No completed orders for this table";
+    return;
+    
+  }
 
-// Today's revenue
-let revenue=0;
-todayOrdersData.forEach(o=>{
-if(o.status==="billed"){
-revenue+=o.total_amount || 0;
-}
-});
+  CURRENT_BILL_ORDERS = orders;
 
-document.getElementById("todayRevenue").innerText="₹"+revenue;
+  const { data: allDishes } = await sb
+    .from("dishes")
+    .select("id,name,price");
 
-// Pending count
-const pending = todayOrdersData.filter(o=>o.status==="pending");
-document.getElementById("pendingCount").innerText=pending.length;
+  let mergedItems = {};
+  let total = 0;
 
-}
+  orders.forEach(o=>{
+    total += o.total_amount;
 
+    o.items.forEach(item=>{
+      if(!mergedItems[item.id]){
+        mergedItems[item.id] = item.quantity;
+      } else {
+        mergedItems[item.id] += item.quantity;
+      }
+    });
+  });
 
-// ---------------- LIVE ORDERS ----------------
-async function loadLiveOrders(){
+  let itemsHTML = "";
 
-const {data} = await sb
-.from("orders")
-.select("*")
-.eq("restaurant_id",restaurantId)
-.in("status",["pending","served"])
-.order("created_at",{ascending:false});
+  Object.keys(mergedItems).forEach(id=>{
+    const dish = allDishes.find(d=>d.id == id);
+    if(dish){
+      const qty = mergedItems[id];
+      const price = dish.price * qty;
+      itemsHTML += `${dish.name} x ${qty} = ₹${price}<br>`;
+    }
+  });
 
-let html="";
-
-for(const order of data){
-
-// fetch items
-const {data:items} = await sb
-.from("order_items")
-.select("*")
-.eq("order_id",order.id);
-
-let itemsHTML="";
-let total=0;
-
-items.forEach(i=>{
-itemsHTML+=`${i.name} x${i.quantity}<br>`;
-total+=i.price*i.quantity;
-});
-
-html+=`
-<div class="glass-card p-4">
-<h4 class="font-semibold mb-2">
-${order.order_type==="delivery" ? "🛵 Delivery" : "🍽️ Table "+order.table_number}
-</h4>
-
-<div class="text-sm text-white/70 mb-2">
-${itemsHTML}
-</div>
-
-<p class="mb-2">Total: ₹${total}</p>
-
-<div class="flex gap-2">
-
-${order.status==="pending" ? 
-<button onclick="updateStatus('${order.id}','served')" class="btn-gradient px-3 py-1 rounded text-sm">Mark Served</button> : ""}
-
-<button onclick="markBilled('${order.id}',${total})" class="bg-green-600 px-3 py-1 rounded text-sm">Billed</button>
-
-</div>
+ document.getElementById("billResult").innerHTML = `
+<div class="card">
+  <h4>Table ${tableNumber} Bill</h4>
+  <hr>
+  ${itemsHTML}
+  <hr>
+  <b>Total: ₹${total}</b>
+  <br><br>
+  <button onclick="downloadBillPDF('${tableNumber}')">
+    Download PDF
+  </button>
 </div>
 `;
-}
+await sb
+  .from("orders")
+  .update({ status: "billed" })
+  .eq("restaurant_id", RESTAURANT_ID)
+  .eq("table_number", tableNumber)
+  .eq("status", "completed")
+  .gte("created_at", today.toISOString());
 
-document.getElementById("liveOrders").innerHTML=html;
-
-}
-
-
-// ---------------- UPDATE STATUS ----------------
-async function updateStatus(orderId,status){
-await sb.from("orders").update({status}).eq("id",orderId);
-loadLiveOrders();
-loadStats();
-}
-
-
-// ---------------- MARK BILLED ----------------
-async function markBilled(orderId,total){
-
-await sb.from("orders")
-.update({
-status:"billed",
-total_amount:total
-})
-.eq("id",orderId);
-
-loadLiveOrders();
-loadStats();
-}
-
-
-// ---------------- GENERATE BILL ----------------
-async function generateBill(){
-
-const 
-table=document.getElementById("billTableNumber").value;
-if(!table) return;
-
-const {data:orders} = await sb
-.from("orders")
-.select("*")
-.eq("restaurant_id",restaurantId)
-.eq("table_number",table)
-.eq("status","billed");
-
-if(!orders || orders.length===0){
-document.getElementById("billPreview").innerHTML="No billed orders";
-return;
-}
-
-let total=0;
-let html="<div class='glass-card p-4'>";
-
-for(const order of orders){
-
-const {data:items} = await sb
-.from("order_items")
-.select("*")
-.eq("order_id",order.id);
-
-items.forEach(i=>{
-html += `${i.name} x${i.quantity} - ₹${i.price*i.quantity}<br>`;
-total += i.price*i.quantity;
-});
+await loadOrders();        // 🔥 instant UI refresh
 
 }
 
-html += `<hr class="my-2">Total: ₹${total}</div>`;
-document.getElementById("billPreview").innerHTML=html;
+  // ===== PDF DESIGN =====
+async function downloadBillPDF(tableNumber, total){
+
+  const { jsPDF } = window.jspdf;
+
+  // Fetch restaurant name
+  const { data: restaurant } = await sb
+    .from("restaurants")
+    .select("name")
+    .eq("id", RESTAURANT_ID)
+    .single();
+
+  const restaurantName = restaurant?.name || "Restaurant";
+
+  // Fetch completed orders
+const orders = CURRENT_BILL_ORDERS;
+
+if(!orders || orders.length === 0){
+  alert("No bill generated");
+  return;
+}
+
+  const { data: allDishes } = await sb
+    .from("dishes")
+    .select("id,name,price");
+
+  let mergedItems = {};
+  let grandTotal = 0;
+
+  orders.forEach(o=>{
+    if(o.items){
+      o.items.forEach(item=>{
+        if(!mergedItems[item.id]){
+          mergedItems[item.id] = item.quantity;
+        } else {
+          mergedItems[item.id] += item.quantity;
+        }
+      });
+    }
+  });
+
+  // Calculate page height dynamically
+  const itemCount = Object.keys(mergedItems).length;
+  const pageHeight = 100 + (itemCount * 8);
+
+  const doc = new jsPDF({
+    unit: "mm",
+    format: [80, pageHeight]
+  });
+
+  let y = 10;
+
+  doc.setFontSize(12);
+  doc.text(restaurantName, 40, y, { align: "center" });
+  y += 8;
+
+  doc.setFontSize(9);
+  doc.text("Table: " + tableNumber, 5, y);
+  y += 5;
+
+  doc.text("Date: " + new Date().toLocaleString(), 5, y);
+  y += 6;
+
+  doc.line(5, y, 75, y);
+  y += 6;
+
+  doc.text("Item", 5, y);
+  doc.text("Qty", 40, y);
+  doc.text("Total", 60, y);
+  y += 4;
+
+  doc.line(5, y, 75, y);
+  y += 6;
+
+  Object.keys(mergedItems).forEach(id=>{
+    const dish = allDishes.find(d => d.id == id);
+    if(dish){
+      const qty = mergedItems[id];
+      const totalItem = dish.price * qty;
+      grandTotal += totalItem;
+
+      doc.text(dish.name, 5, y);
+      doc.text(String(qty), 40, y);
+      doc.text("Rs " + totalItem, 60, y);
+      y += 6;
+    }
+  });
+
+  doc.line(5, y, 75, y);
+  y += 6;
+
+  doc.setFontSize(10);
+  doc.text("Grand Total: Rs " + grandTotal, 5, y);
+  y += 8;
+
+  doc.setFontSize(9);
+  doc.text("Thank You! Visit Again", 40, y, { align: "center" });
+
+  doc.save(restaurantName + "_Table" + tableNumber + "_Bill.pdf");
 }
 
 
-// Auto refresh every 8 seconds
-setInterval(()=>{
-if(restaurantId){
-loadLiveOrders();
-loadStats();
-}
-},8000);
-
-
-// ---------------- LOAD CATEGORIES ----------------
-async function loadCategories(){
-
-const {data} = await sb
-.from("categories")
-.select("*")
-.eq("restaurant_id",restaurantId);
-
-let options="";
-data.forEach(cat=>{
-options +=` <option value="${cat.id}">${cat.name}</option>`;
-});
-
-document.getElementById("dishCategory").innerHTML=options;
-}
-
-
-// ---------------- ADD CATEGORY ----------------
-async function addCategory(){
-
-const name=document.getElementById("newCategory").value;
-if(!name) return;
-
-await sb.from("categories").insert({
-restaurant_id:restaurantId,
-name:name
-});
-
-document.getElementById("newCategory").value="";
-loadCategories();
-}
-
-
-// ---------------- ADD DISH ----------------
-async function addDish(){
-
-const name=document.getElementById("dishName").value;
-const price=document.getElementById("dishPrice").value;
-const image=document.getElementById("dishImage").value;
-const category=document.getElementById("dishCategory").value;
-
-if(!name || !price) return;
-
-await sb.from("menu_items").insert({
-restaurant_id:restaurantId,
-name:name,
-price:price,
-image:image,
-category_id:category,
-available:true
-});
-
-document.getElementById("dishName").value="";
-document.getElementById("dishPrice").value="";
-document.getElementById("dishImage").value="";
-
-loadMenuList();
-}
-
-
-// ---------------- LOAD MENU LIST ----------------
-async function loadMenuList(){
-
-const {data} = await sb
-.from("menu_items")
-.select("*, categories(name)")
-.eq("restaurant_id",restaurantId);
-
-let html="";
-
-data.forEach(item=>{
-html+=`
-<div class="glass-card p-3 mb-3 flex justify-between items-center">
-<div>
-<h4 class="font-semibold">${item.name}</h4>
-<p class="text-sm text-white/60">
-₹${item.price} • ${item.categories?.name || ""}
-</p>
-</div>
-<button onclick="deleteDish('${item.id}')" class="bg-red-600 px-3 py-1 rounded text-sm">
-Delete
-</button>
-</div>
-`;
-});
-
-document.getElementById("menuList").innerHTML=html;
-}
-
-
-// ---------------- DELETE DISH ----------------
-async function deleteDish(id){
-await sb.from("menu_items").delete().eq("id",id);
-loadMenuList();
-}
-
-
-// ---------------- REVENUE FILTER ----------------
-async function loadRevenue(){
-
-const filter=document.getElementById("revenueFilter").value;
-let startDate=new Date();
-
-if(filter==="today"){
-startDate.setHours(0,0,0,0);
-}
-if(filter==="week"){
-startDate.setDate(startDate.getDate()-7);
-}
-if(filter==="month"){
-startDate.setMonth(startDate.getMonth()-1);
-}
-
-const {data} = await sb
-.from("orders")
-.select("*")
-.eq("restaurant_id",restaurantId)
-.eq("status","billed")
-.gte("created_at",startDate.toISOString());
-
-let total=0;
-data.forEach(o=> total+=o.total_amount || 0);
-
-document.getElementById("revenueData").innerHTML =
-<div class="glass-card p-4">Total Revenue: ₹${total}</div>;
-}
-
-
-// ---------------- ORDER HISTORY ----------------
-async function loadHistory(){
-
-const date=document.getElementById("historyDate").value;
-if(!date) return;
-
-const start=new Date(date);
-start.setHours(0,0,0,0);
-
-const end=new Date(date);
-end.setHours(23,59,59,999);
-
-const {data} = await sb
-.from("orders")
-.select("*")
-.eq("restaurant_id",restaurantId)
-.gte("created_at",start.toISOString())
-.lte("created_at",end.toISOString())
-.order("created_at",{ascending:false});
-
-let html="";
-
-data.forEach(o=>{
-html+=`
-<div class="glass-card p-3 mb-3">
-${o.order_type==="delivery" ? "🛵 Delivery" : "🍽️ Table "+o.table_number}
-<br>
-Status: ${o.status}
-<br>
-₹${o.total_amount || 0}
-</div>
-`;
-});
-
-document.getElementById("historyList").innerHTML=html;
-}
-
-
-// ---------------- INIT CALL ----------------
-initDashboard();
-
+  
 </script>
-
-</main>
-</div>
 
 </body>
 </html>
