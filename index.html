@@ -1,1019 +1,441 @@
-<!doctype html>
-<html lang="en" class="h-full">
- <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Luxe Dine</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Poppins:wght@300;400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-primary: linear-gradient(135deg, #0D001A 0%, #1A0030 50%, #000D1A 100%);
-      --pink-hot: #FF006E;
-      --pink-light: #FF4DA6;
-      --blue-electric: #00D4FF;
-      --blue-deep: #0066FF;
-      --purple-mid: #8B00FF;
-      --card-glass: rgba(255, 255, 255, 0.06);
-      --card-border: rgba(255, 105, 180, 0.2);
-      --text-primary: #FFFFFF;
-      --text-muted: rgba(255,255,255,0.55);
-      --gradient-main: linear-gradient(135deg, #FF006E, #8B00FF, #00D4FF);
-      --gradient-pink-blue: linear-gradient(90deg, #FF4DA6, #00D4FF);
-    }
-    
-    * { box-sizing: border-box; }
-    
-    html, body { 
-      height: 100%; 
-      margin: 0; 
-      font-family: 'Poppins', sans-serif;
-    }
-    
-    .app-wrapper {
-      min-height: 100%;
-      width: 100%;
-      background: var(--bg-primary);
-      background-attachment: fixed;
-      overflow-x: hidden;
-    }
-    
-    .font-display { font-family: 'Playfair Display', serif; }
-    .font-numbers { font-family: 'Space Grotesk', sans-serif; }
-    
-    .gradient-text {
-      background: var(--gradient-pink-blue);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    .glass-card {
-      background: var(--card-glass);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-    
-    .gradient-border {
-      position: relative;
-      background: var(--card-glass);
-      border-radius: 16px;
-    }
-    
-    .gradient-border::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 16px;
-      padding: 1.5px;
-      background: linear-gradient(135deg, var(--pink-hot), var(--purple-mid), var(--blue-electric));
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
-    }
-    
-    .btn-gradient {
-      background: linear-gradient(135deg, var(--pink-hot), var(--purple-mid));
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(255, 0, 110, 0.4);
-    }
-    
-    .btn-gradient:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 30px rgba(255, 0, 110, 0.6);
-    }
-    
-    .glow-pink { box-shadow: 0 0 20px rgba(255, 0, 110, 0.5); }
-    .glow-blue { box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
-    
-    .avatar-ring {
-      background: linear-gradient(135deg, var(--pink-hot), var(--blue-electric));
-      padding: 2px;
-      border-radius: 50%;
-    }
-    
-    .search-input:focus {
-      border-color: var(--pink-hot);
-      box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.2), 0 0 30px rgba(0, 212, 255, 0.15);
-    }
-    
-    .category-scroll::-webkit-scrollbar { display: none; }
-    .category-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    .category-item {
-      transition: all 0.3s ease;
-    }
-    
-    .category-item:hover {
-      transform: scale(1.08);
-    }
-    
-    .category-item.active .category-ring {
-      background: linear-gradient(135deg, var(--pink-hot), var(--blue-electric));
-      padding: 3px;
-    }
-    
-    .food-card {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .food-card:hover {
-      transform: translateY(-8px);
-      background: linear-gradient(135deg, rgba(255,0,110,0.12), rgba(0,212,255,0.12));
-    }
-    
-    .food-card:hover .food-image {
-      transform: scale(1.05);
-    }
-    
-    .food-image {
-      transition: transform 0.4s ease;
-    }
-    
-    .banner-slide {
-      animation: slideIn 0.5s ease;
-    }
-    
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(30px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-10px) rotate(5deg); }
-    }
-    
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 110, 0.4); }
-      50% { box-shadow: 0 0 40px rgba(255, 0, 110, 0.7); }
-    }
-    
-    .floating { animation: float 3s ease-in-out infinite; }
-    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-    
-    .toggle-track {
-      transition: background 0.3s ease;
-    }
-    
-    .toggle-thumb {
-      transition: transform 0.3s ease, background 0.3s ease;
-    }
-    
-    .veg-badge {
-      border: 2px solid #22c55e;
-    }
-    
-    .non-veg-badge {
-      border: 2px solid #ef4444;
-    }
-    
-    .cart-badge {
-      animation: bounce 0.3s ease;
-    }
-    
-    @keyframes bounce {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.3); }
-    }
-    
-    .shimmer {
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    
-    .cart-panel {
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .cart-panel.open {
-      transform: translateY(0);
-    }
-    
-    .quantity-btn {
-      transition: all 0.2s ease;
-    }
-    
-    .quantity-btn:active {
-      transform: scale(0.9);
-    }
-    
-    .rating-star {
-      filter: drop-shadow(0 0 3px rgba(255, 193, 7, 0.5));
-    }
-    
-    .add-btn-initial {
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .add-btn-expanding {
-      animation: expandButton 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-    
-    @keyframes expandButton {
-      0% {
-        width: auto;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
-      }
-      100% {
-        width: 100%;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
-      }
-    }
-    
-    .qty-container {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      animation: fadeInQty 0.4s ease 0.3s backwards;
-    }
-    
-    @keyframes fadeInQty {
-      from {
-        opacity: 0;
-        transform: scale(0.8);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-    
-    .quantity-btn.expanded {
-      animation: scaleUp 0.3s ease 0.3s backwards;
-    }
-    
-    @keyframes scaleUp {
-      from {
-        transform: scale(0.5);
-        opacity: 0;
-      }
-      to {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-  </style>
-  <style>body { box-sizing: border-box; }</style>
- </head>
- <body class="h-full">
-  <div class="app-wrapper overflow-auto" id="app"><!-- Header -->
-   <header class="sticky top-0 z-50 px-4 py-3" style="background: linear-gradient(180deg, #1A0030 0%, rgba(26,0,48,0.95) 100%); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,105,180,0.15);">
-    <div class="flex items-center justify-between max-w-lg mx-auto mb-3">
-     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full glass-card flex items-center justify-center">
-       <svg class="w-5 h-5" viewbox="0 0 24 24" fill="none"><defs>
-         <lineargradient id="locGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#FF006E" />
-          <stop offset="100%" style="stop-color:#00D4FF" />
-         </lineargradient>
-        </defs> <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="url(#locGrad)" />
-       </svg>
-      </div>
-      <div><button class="flex items-center gap-1 text-white font-semibold text-sm" id="tableDisplay"> 🍽️ Table 7 
-        <svg class="w-4 h-4 gradient-text" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-        </svg></button>
-       <p class="text-xs" style="color: var(--text-muted);" id="restaurantDisplay">The Grand Spice Restaurant</p>
-      </div>
-     </div>
-     <div class="flex items-center gap-3"><button class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:glow-pink transition-all"> <span class="text-lg">💳</span> </button>
-      <div class="avatar-ring">
-       <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-        JD
-       </div>
-      </div>
-     </div>
-    </div><!-- Order Type Tabs -->
-    <div class="flex gap-2 max-w-lg mx-auto"><button id="dineInTab" class="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm transition-all" style="background: linear-gradient(135deg, #FF006E, #8B00FF); color: white;" onclick="switchOrderType('dine-in')"> 🍽️ Dine In </button> <button id="onlineTab" class="flex-1 py-2.5 px-3 rounded-xl font-semibold text-sm transition-all text-white/60" style="background: rgba(255,255,255,0.1);" onclick="switchOrderType('online')"> 🛵 Online Order </button>
-    </div>
-   </header><!-- Main Content -->
-   <main class="px-4 pb-32 max-w-lg mx-auto"><!-- Search Bar -->
-    <div class="mt-4 mb-5">
-     <div class="flex items-center gap-3">
-      <div class="flex-1 relative"><input type="text" id="searchInput" placeholder="Search 'Biryani', 'Pizza'..." class="search-input w-full py-3 px-12 rounded-2xl bg-white/[0.08] border border-pink-500/40 text-white placeholder-white/40 text-sm focus:outline-none transition-all italic">
-       <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" viewbox="0 0 24 24" fill="none"><defs>
-         <lineargradient id="searchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#FF4DA6" />
-          <stop offset="100%" style="stop-color:#00D4FF" />
-         </lineargradient>
-        </defs> <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="url(#searchGrad)" stroke-width="2" stroke-linecap="round" />
-       </svg><button class="absolute right-4 top-1/2 -translate-y-1/2"> <span class="text-lg" style="filter: drop-shadow(0 0 8px rgba(255,0,110,0.5));">🎤</span> </button>
-      </div>
-      <div class="flex items-center gap-2"><span class="text-[10px] font-semibold tracking-wider" style="color: var(--text-muted);">VEG</span> <button id="vegToggle" class="toggle-track w-11 h-6 rounded-full bg-white/20 relative" onclick="toggleVeg()">
-        <div class="toggle-thumb w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5"></div></button>
-      </div>
-     </div>
-    </div><!-- Hero Banner Carousel -->
-    <div class="mb-6 relative overflow-hidden rounded-2xl" style="height: 160px;">
-     <div id="bannerCarousel" class="relative h-full"><!-- Banner 1 -->
-      <div class="banner-slide absolute inset-0 rounded-2xl p-5 flex items-center justify-between" style="background: linear-gradient(135deg, #FF006E 0%, #FF4DA6 40%, #8B00FF 100%);">
-       <div class="z-10">
-        <p class="text-white/80 text-xs font-medium mb-1">Limited Time</p>
-        <h2 class="text-white font-bold text-3xl font-display" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.3);">FLAT 50% OFF</h2>
-        <p class="text-white/90 text-sm mt-1">On your first 3 orders</p><button class="mt-3 px-4 py-1.5 bg-black/90 text-white text-xs font-semibold rounded-full flex items-center gap-1 hover:bg-black transition-all"> Order Now <span>→</span> </button>
-       </div>
-       <div class="absolute right-4 top-1/2 -translate-y-1/2 text-5xl floating opacity-90">
-        🎫
-       </div>
-       <div class="absolute right-16 top-4 text-2xl floating" style="animation-delay: 0.5s;">
-        ✨
-       </div>
-       <div class="absolute right-8 bottom-4 text-3xl floating" style="animation-delay: 1s;">
-        🎉
-       </div>
-      </div>
-     </div><!-- Carousel Dots -->
-     <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20"><button class="carousel-dot w-2 h-2 rounded-full bg-white" data-index="0"></button> <button class="carousel-dot w-2 h-2 rounded-full bg-white/40" data-index="1"></button> <button class="carousel-dot w-2 h-2 rounded-full bg-white/40" data-index="2"></button>
-     </div>
-    </div><!-- Category Scroll -->
-    <div class="mb-6">
-     <div class="flex items-end justify-between mb-3">
-      <div>
-       <h3 class="text-white font-semibold text-lg">What's on your mind?</h3>
-       <p class="text-xs gradient-text font-medium">Tap to explore</p>
-      </div>
-     </div>
-     <div class="category-scroll flex gap-4 overflow-x-auto pb-2" id="categoryScroll"><!-- Categories will be rendered here -->
-     </div>
-    </div><!-- Popular Section -->
-    <div class="mb-6">
-     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-white font-semibold text-lg">🔥 Popular Right Now</h3><button class="text-xs gradient-text font-semibold">See All</button>
-     </div>
-     <div id="menuGrid" class="grid grid-cols-2 gap-3"><!-- Food cards will be rendered here -->
-     </div>
-    </div><!-- Chef's Special -->
-    <div class="mb-6">
-     <h3 class="text-white font-semibold text-lg mb-4">👨‍🍳 Chef's Special</h3>
-     <div class="gradient-border p-4">
-      <div class="flex gap-4">
-       <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&amp;h=200&amp;fit=crop" alt="Special dish" class="w-full h-full object-cover" loading="lazy" onerror="this.style.background='linear-gradient(135deg, #FF006E, #8B00FF)'; this.alt='Special dish';">
-       </div>
-       <div class="flex-1">
-        <div class="flex items-start justify-between">
-         <div><span class="inline-block w-4 h-4 veg-badge rounded-sm flex items-center justify-center mb-1"> <span class="w-2 h-2 rounded-full bg-green-500"></span> </span>
-          <h4 class="text-white font-semibold">Truffle Mushroom Risotto</h4>
-         </div>
-         <div class="flex items-center gap-1 bg-green-500/20 px-2 py-0.5 rounded"><span class="text-yellow-400 text-xs rating-star">★</span> <span class="text-white text-xs font-numbers font-semibold">4.9</span>
-         </div>
-        </div>
-        <p class="text-xs mt-1" style="color: var(--text-muted);">Creamy arborio rice with wild mushrooms</p>
-        <div class="flex items-center justify-between mt-3"><span class="text-white font-numbers font-bold">₹549</span> <button class="btn-gradient px-4 py-1.5 rounded-lg text-white text-xs font-semibold" onclick="addToCart('special-1', 'Truffle Mushroom Risotto', 549)"> ADD + </button>
-        </div>
-       </div>
-      </div>
-     </div>
-    </div>
-   </main><!-- Floating Cart Button --> <button id="cartBtn" onclick="toggleCart()" class="fixed bottom-6 right-6 z-40 btn-gradient w-14 h-14 rounded-full flex items-center justify-center pulse-glow" style="display: none;"> <span class="text-2xl">🛒</span> <span id="cartBadge" class="cart-badge absolute -top-1 -right-1 w-6 h-6 bg-white text-pink-600 rounded-full text-xs font-bold flex items-center justify-center font-numbers">0</span> </button> <!-- Cart Panel -->
-   <div id="cartPanel" class="cart-panel fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl" style="background: linear-gradient(180deg, #1A0030 0%, #0D001A 100%); border-top: 1px solid rgba(255,105,180,0.3); max-height: 70%;">
-    <div class="p-4 max-w-lg mx-auto">
-     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-white font-semibold text-lg">Your Cart</h3><button onclick="toggleCart()" class="w-8 h-8 rounded-full glass-card flex items-center justify-center text-white">✕</button>
-     </div>
-     <div id="cartItems" class="space-y-3 max-h-64 overflow-y-auto mb-4"><!-- Cart items will be rendered here -->
-     </div>
-     <div class="border-t border-white/10 pt-4">
-      <div class="flex justify-between items-center mb-4"><span class="text-white/70">Total</span> <span id="cartTotal" class="text-white font-numbers font-bold text-xl">₹0</span>
-      </div><button id="checkoutBtn" class="w-full btn-gradient py-3.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2" onclick="checkout()"> <span>Place Order</span> <span>→</span> </button>
-     </div>
-    </div>
-   </div><!-- Success Toast -->
-   <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl glass-card border border-green-500/50 text-white text-sm font-medium opacity-0 transition-all duration-300 pointer-events-none" style="transform: translateX(-50%) translateY(-20px);"><span class="flex items-center gap-2">✅ <span id="toastMessage">Added to cart!</span></span>
-   </div>
-  </div>
-  <script>
-    // Configuration
-    const defaultConfig = {
-      restaurant_name: 'The Grand Spice Restaurant',
-      table_number: 'Table 7',
-      primary_color: '#FF006E',
-      secondary_color: '#00D4FF',
-      background_color: '#0D001A',
-      text_color: '#FFFFFF',
-      accent_color: '#8B00FF',
-      font_family: 'Poppins',
-      font_size: 14
-    };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxe Dine</title>
 
-    let config = { ...defaultConfig };
-    let cartData = [];
-    let vegOnly = false;
-    let currentCategory = 'all';
-    let currentBanner = 0;
-    let searchQuery = '';
-    let orderType = 'dine-in'; // 'dine-in' or 'online'
-    let deliveryAddress = null;
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    // Menu data
-    const categories = [
-      { id: 'all', name: 'All', emoji: '🍽️' },
-      { id: 'biryani', name: 'Biryani', emoji: '🍚' },
-      { id: 'pizza', name: 'Pizza', emoji: '🍕' },
-      { id: 'burger', name: 'Burger', emoji: '🍔' },
-      { id: 'chinese', name: 'Chinese', emoji: '🥡' },
-      { id: 'dessert', name: 'Dessert', emoji: '🍰' },
-      { id: 'drinks', name: 'Drinks', emoji: '🥤' }
-    ];
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-    const menuItems = [
-      { id: 'item-1', name: 'Hyderabadi Biryani', price: 349, rating: 4.8, category: 'biryani', veg: false, image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&h=300&fit=crop', desc: 'Aromatic basmati rice with tender meat' },
-      { id: 'item-2', name: 'Paneer Tikka Pizza', price: 299, rating: 4.6, category: 'pizza', veg: true, image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&h=300&fit=crop', desc: 'Loaded with spiced paneer chunks' },
-      { id: 'item-3', name: 'Veggie Supreme', price: 279, rating: 4.5, category: 'pizza', veg: true, image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=300&h=300&fit=crop', desc: 'Fresh vegetables on cheesy base' },
-      { id: 'item-4', name: 'Classic Smash Burger', price: 199, rating: 4.7, category: 'burger', veg: false, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&h=300&fit=crop', desc: 'Juicy patty with special sauce' },
-      { id: 'item-5', name: 'Veg Manchurian', price: 179, rating: 4.4, category: 'chinese', veg: true, image: 'https://images.unsplash.com/photo-1525755662778-989d0524087e?w=300&h=300&fit=crop', desc: 'Crispy veggie balls in tangy sauce' },
-      { id: 'item-6', name: 'Chocolate Lava Cake', price: 149, rating: 4.9, category: 'dessert', veg: true, image: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=300&h=300&fit=crop', desc: 'Warm cake with molten center' },
-      { id: 'item-7', name: 'Mango Lassi', price: 89, rating: 4.7, category: 'drinks', veg: true, image: 'https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=300&h=300&fit=crop', desc: 'Creamy yogurt with fresh mango' },
-      { id: 'item-8', name: 'Veg Biryani', price: 249, rating: 4.5, category: 'biryani', veg: true, image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&h=300&fit=crop', desc: 'Fragrant rice with mixed vegetables' }
-    ];
+<style>
+:root{
+--bg-primary:linear-gradient(135deg,#0D001A 0%,#1A0030 50%,#000D1A 100%);
+--pink-hot:#FF006E;
+--blue-electric:#00D4FF;
+--purple-mid:#8B00FF;
+--card-glass:rgba(255,255,255,0.06);
+--card-border:rgba(255,105,180,0.2);
+--text-muted:rgba(255,255,255,0.55);
+}
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:var(--bg-primary);
+color:white;
+}
+.glass-card{
+background:var(--card-glass);
+border:1px solid var(--card-border);
+backdrop-filter:blur(20px);
+border-radius:16px;
+}
+.btn-gradient{
+background:linear-gradient(135deg,var(--pink-hot),var(--purple-mid));
+}
+.food-card:hover{
+transform:translateY(-6px);
+transition:0.3s;
+}
+</style>
+</head>
 
-    const banners = [
-      { gradient: 'linear-gradient(135deg, #FF006E 0%, #FF4DA6 40%, #8B00FF 100%)', title: 'FLAT 50% OFF', subtitle: 'On your first 3 orders', emoji: '🎫' },
-      { gradient: 'linear-gradient(135deg, #0066FF, #00D4FF, #8B00FF)', title: 'FREE DELIVERY', subtitle: 'Tonight Special 🌙', emoji: '🛵' },
-      { gradient: 'linear-gradient(135deg, #FF006E, #FF8C00)', title: 'NEW ARRIVALS', subtitle: 'Fresh items added 🔥', emoji: '⭐' }
-    ];
+<body>
 
-    // Data SDK Handler
-    const dataHandler = {
-      onDataChanged(data) {
-        cartData = data;
-        updateCartUI();
-      }
-    };
+<!-- HEADER -->
+<header class="sticky top-0 z-50 p-4 backdrop-blur-lg" style="background:linear-gradient(180deg,#1A0030 0%,rgba(26,0,48,0.95)100%);border-bottom:1px solid rgba(255,105,180,0.2);">
 
-    // Initialize
-    async function init() {
-      // Init Element SDK
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          onConfigChange: async (cfg) => {
-            config = { ...defaultConfig, ...cfg };
-            applyConfig();
-          },
-          mapToCapabilities: (cfg) => ({
-            recolorables: [
-              { get: () => cfg.background_color || defaultConfig.background_color, set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
-              { get: () => cfg.primary_color || defaultConfig.primary_color, set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
-              { get: () => cfg.text_color || defaultConfig.text_color, set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
-              { get: () => cfg.secondary_color || defaultConfig.secondary_color, set: (v) => { cfg.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } },
-              { get: () => cfg.accent_color || defaultConfig.accent_color, set: (v) => { cfg.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } }
-            ],
-            borderables: [],
-            fontEditable: { get: () => cfg.font_family || defaultConfig.font_family, set: (v) => { cfg.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
-            fontSizeable: { get: () => cfg.font_size || defaultConfig.font_size, set: (v) => { cfg.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
-          }),
-          mapToEditPanelValues: (cfg) => new Map([
-            ['restaurant_name', cfg.restaurant_name || defaultConfig.restaurant_name],
-            ['table_number', cfg.table_number || defaultConfig.table_number]
-          ])
-        });
-      }
+<div class="flex justify-between items-center max-w-lg mx-auto mb-3">
 
-      // Init Data SDK
-      if (window.dataSdk) {
-        const result = await window.dataSdk.init(dataHandler);
-        if (!result.isOk) {
-          console.error('Data SDK init failed');
-        }
-      }
+<div>
+<h2 id="restaurantName" class="font-semibold text-lg">Loading...</h2>
+<p id="tableDisplay" class="text-xs text-white/60"></p>
+</div>
 
-      renderCategories();
-      renderMenu();
-      startBannerCarousel();
-      setupSearch();
-      applyConfig();
-    }
+<div class="flex gap-2">
+<button onclick="switchType('dine')" id="dineBtn" class="px-4 py-2 rounded-xl btn-gradient text-sm font-semibold">🍽️ Dine In</button>
+<button onclick="switchType('delivery')" id="deliveryBtn" class="px-4 py-2 rounded-xl bg-white/10 text-sm">🛵 Online</button>
+</div>
 
-    function applyConfig() {
-      const font = config.font_family || defaultConfig.font_family;
-      const baseSize = config.font_size || defaultConfig.font_size;
-      const textColor = config.text_color || defaultConfig.text_color;
-      const primaryColor = config.primary_color || defaultConfig.primary_color;
-      const bgColor = config.background_color || defaultConfig.background_color;
+</div>
 
-      document.body.style.fontFamily = `${font}, Poppins, sans-serif`;
-      
-      document.getElementById('restaurantDisplay').textContent = config.restaurant_name || defaultConfig.restaurant_name;
-      document.getElementById('tableDisplay').innerHTML = `${config.table_number || defaultConfig.table_number} <svg class="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
+</header>
 
-      document.querySelectorAll('h3, h4').forEach(el => {
-        el.style.fontSize = `${baseSize * 1.15}px`;
-      });
+<!-- MAIN -->
+<main class="px-4 pb-32 max-w-lg mx-auto">
 
-      document.querySelectorAll('p, span, button').forEach(el => {
-        if (!el.classList.contains('font-numbers')) {
-          el.style.fontSize = `${baseSize}px`;
-        }
-      });
-    }
+<!-- SEARCH -->
+<div class="mt-4 mb-4">
+<input id="searchInput" type="text" placeholder="Search food..." class="w-full p-3 rounded-xl bg-white/10 border border-pink-500/40 text-sm">
+</div>
 
-    function renderCategories() {
-      const container = document.getElementById('categoryScroll');
-      container.innerHTML = categories.map(cat => `
-        <button class="category-item flex flex-col items-center gap-2 flex-shrink-0 ${currentCategory === cat.id ? 'active' : ''}" onclick="selectCategory('${cat.id}')">
-          <div class="category-ring rounded-full ${currentCategory === cat.id ? '' : ''}">
-            <div class="w-16 h-16 rounded-full glass-card flex items-center justify-center text-2xl">
-              ${cat.emoji}
-            </div>
-          </div>
-          <span class="text-xs font-medium ${currentCategory === cat.id ? 'text-white' : 'text-white/60'}">${cat.name}</span>
-        </button>
-      `).join('');
-    }
+<!-- CATEGORY -->
+<div id="categoryContainer" class="flex gap-3 overflow-x-auto pb-3"></div>
 
-    function selectCategory(catId) {
-      currentCategory = catId;
-      renderCategories();
-      renderMenu();
-    }
+<!-- BANNER -->
+<div id="bannerContainer" class="mb-6"></div>
 
-    function renderMenu() {
-      const container = document.getElementById('menuGrid');
-      let filtered = menuItems;
+<!-- MENU -->
+<div id="menuContainer" class="grid grid-cols-2 gap-3"></div>
 
-      if (currentCategory !== 'all') {
-        filtered = filtered.filter(item => item.category === currentCategory);
-      }
+<!-- CART BUTTON -->
+<button id="cartBtn" onclick="toggleCart()" class="fixed bottom-6 right-6 w-14 h-14 rounded-full btn-gradient hidden">🛒</button>
 
-      if (vegOnly) {
-        filtered = filtered.filter(item => item.veg);
-      }
+<!-- CART PANEL -->
+<div id="cartPanel" class="fixed bottom-0 left-0 right-0 bg-[#1A0030] p-4 hidden">
+<h3 class="font-semibold mb-3">Your Cart</h3>
+<div id="cartItems"></div>
+<div class="flex justify-between mt-3">
+<span>Total:</span>
+<span id="cartTotal">₹0</span>
+</div>
+<button onclick="placeOrder()" class="w-full mt-3 p-3 btn-gradient rounded-xl">Place Order</button>
+</div>
 
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(item => 
-          item.name.toLowerCase().includes(query) || 
-          item.desc.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query)
-        );
-      }
+<script>
 
-      container.innerHTML = filtered.map(item => {
-        const inCart = cartData.find(c => c.item_id === item.id);
-        const cartQty = inCart ? inCart.quantity : 0;
-        
-        return `
-          <div class="food-card glass-card rounded-2xl overflow-hidden">
-            <div class="relative h-28 overflow-hidden">
-              <img src="${item.image}" alt="${item.name}" class="food-image w-full h-full object-cover" loading="lazy" onerror="this.style.background='linear-gradient(135deg, #FF006E, #8B00FF)'; this.alt='${item.name}';">
-              <div class="absolute top-2 left-2">
-                <span class="inline-flex items-center justify-center w-5 h-5 ${item.veg ? 'veg-badge' : 'non-veg-badge'} rounded bg-white/90">
-                  <span class="w-2.5 h-2.5 rounded-full ${item.veg ? 'bg-green-500' : 'bg-red-500'}"></span>
-                </span>
-              </div>
-              <div class="absolute top-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur px-1.5 py-0.5 rounded-md">
-                <span class="text-yellow-400 text-xs rating-star">★</span>
-                <span class="text-white text-xs font-numbers font-semibold">${item.rating}</span>
-              </div>
-            </div>
-            <div class="p-3">
-              <h4 class="text-white font-semibold text-sm truncate">${item.name}</h4>
-              <p class="text-xs mt-0.5 truncate" style="color: var(--text-muted);">${item.desc}</p>
-              <div class="flex items-center justify-between mt-3">
-                <span class="text-white font-numbers font-bold text-sm">₹${item.price}</span>
-                <div class="relative" style="display: flex; align-items: center;">
-                  ${cartQty === 0 ? `
-                    <button class="btn-gradient px-3 py-1 rounded-lg text-white text-xs font-semibold add-btn-initial" id="add-${item.id}" onclick="startAddToCart('${item.id}', '${item.name}', ${item.price}, this)">
-                      ADD
-                    </button>
-                  ` : `
-                    <div class="qty-container">
-                      <button class="quantity-btn expanded w-7 h-7 rounded-lg glass-card text-white text-sm font-bold" id="minus-${item.id}" onclick="quickUpdateQty('${item.id}', -1, this)">−</button>
-                      <span class="text-white font-numbers font-semibold w-6 text-center" id="qty-${item.id}">${cartQty}</span>
-                      <button class="quantity-btn expanded w-7 h-7 rounded-lg glass-card text-white text-sm font-bold" id="plus-${item.id}" onclick="quickUpdateQty('${item.id}', 1, this)">+</button>
-                    </div>
-                  `}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+// ---------------- SUPABASE CONFIG ----------------
+// ⚠️ YAHAN APNA SUPABASE URL & ANON KEY DAALO
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
 
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-2 py-12 text-center">
-            <span class="text-4xl mb-3 block">🍽️</span>
-            <p class="text-white/60">No items found</p>
-          </div>
-        `;
-      }
-    }
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function setupSearch() {
-      const input = document.getElementById('searchInput');
-      input.addEventListener('input', (e) => {
-        searchQuery = e.target.value;
-        renderMenu();
-      });
-    }
+// ---------------- GLOBAL VARIABLES ----------------
+let restaurantId = null;
+let slug = null;
+let tableNumber = null;
+let orderType = "dine"; // dine | delivery
+let cart = [];
+let activeCategory = "all";
+let searchText = "";
 
-    function toggleVeg() {
-      vegOnly = !vegOnly;
-      const toggle = document.getElementById('vegToggle');
-      const thumb = toggle.querySelector('.toggle-thumb');
-      
-      if (vegOnly) {
-        toggle.style.background = 'linear-gradient(90deg, #22c55e, #4ade80)';
-        thumb.style.transform = 'translateX(20px)';
-        thumb.style.background = '#fff';
-      } else {
-        toggle.style.background = 'rgba(255,255,255,0.2)';
-        thumb.style.transform = 'translateX(0)';
-      }
-      
-      renderMenu();
-    }
+// ---------------- URL DETECT ----------------
+function detectParams(){
+const params = new URLSearchParams(window.location.search);
+slug = params.get("slug");
+tableNumber = params.get("table");
 
-    function startBannerCarousel() {
-      setInterval(() => {
-        currentBanner = (currentBanner + 1) % banners.length;
-        renderBanner();
-      }, 4000);
-    }
+if(!slug){
+alert("Restaurant not found");
+return;
+}
 
-    function renderBanner() {
-      const banner = banners[currentBanner];
-      const container = document.getElementById('bannerCarousel');
-      
-      container.innerHTML = `
-        <div class="banner-slide absolute inset-0 rounded-2xl p-5 flex items-center justify-between" style="background: ${banner.gradient};">
-          <div class="z-10">
-            <p class="text-white/80 text-xs font-medium mb-1">Limited Time</p>
-            <h2 class="text-white font-bold text-3xl font-display" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.3);">${banner.title}</h2>
-            <p class="text-white/90 text-sm mt-1">${banner.subtitle}</p>
-            <button class="mt-3 px-4 py-1.5 bg-black/90 text-white text-xs font-semibold rounded-full flex items-center gap-1 hover:bg-black transition-all">
-              Order Now <span>→</span>
-            </button>
-          </div>
-          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-5xl floating opacity-90">${banner.emoji}</div>
-        </div>
-      `;
+if(tableNumber){
+document.getElementById("tableDisplay").innerText = "Table " + tableNumber;
+}else{
+document.getElementById("tableDisplay").innerText = "Online Order";
+orderType = "delivery";
+}
+}
 
-      document.querySelectorAll('.carousel-dot').forEach((dot, i) => {
-        dot.classList.toggle('bg-white', i === currentBanner);
-        dot.classList.toggle('bg-white/40', i !== currentBanner);
-      });
-    }
+// ---------------- FETCH RESTAURANT ----------------
+async function loadRestaurant(){
+const {data} = await sb
+.from("restaurants")
+.select("*")
+.eq("slug",slug)
+.single();
 
-    async function startAddToCart(itemId, itemName, price, btnElement) {
-      // Add item to cart immediately
-      if (cartData.length >= 999) {
-        showToast('Cart limit reached!');
-        return;
-      }
+if(!data){
+alert("Invalid restaurant");
+return;
+}
 
-      const existing = cartData.find(item => item.item_id === itemId);
-      
-      if (!existing) {
-        const newItem = {
-          item_id: itemId,
-          item_name: itemName,
-          quantity: 1,
-          price: price,
-          added_at: new Date().toISOString()
-        };
-        
-        if (window.dataSdk) {
-          const result = await window.dataSdk.create(newItem);
-          if (!result.isOk) {
-            showToast('Failed to add to cart');
-            return;
-          }
-        }
-      }
-      
-      showToast(`${itemName} added!`);
-      
-      // Smooth animation: expand button to full width
-      btnElement.classList.add('add-btn-expanding');
-      
-      // After expansion, replace with quantity controls
-      setTimeout(() => {
-        // Update cart immediately reflects in renderMenu via onDataChanged
-        const item = cartData.find(c => c.item_id === itemId);
-        if (item) {
-          const parent = btnElement.parentElement;
-          
-          parent.innerHTML = `
-            <div class="qty-container">
-              <button class="quantity-btn expanded w-7 h-7 rounded-lg glass-card text-white text-sm font-bold" onclick="quickUpdateQty('${itemId}', -1, this)">−</button>
-              <span class="text-white font-numbers font-semibold w-6 text-center" id="qty-${itemId}">${item.quantity}</span>
-              <button class="quantity-btn expanded w-7 h-7 rounded-lg glass-card text-white text-sm font-bold" onclick="quickUpdateQty('${itemId}', 1, this)">+</button>
-            </div>
-          `;
-        }
-      }, 500);
-    }
+restaurantId = data.id;
+document.getElementById("restaurantName").innerText = data.name;
 
-    async function quickUpdateQty(itemId, delta, btnElement) {
-      const item = cartData.find(i => i.item_id === itemId);
-      if (!item) return;
+loadCategories();
+loadMenu();
+}
 
-      const newQty = item.quantity + delta;
-      
-      if (newQty <= 0) {
-        if (window.dataSdk) {
-          await window.dataSdk.delete(item);
-        }
-      } else {
-        item.quantity = newQty;
-        if (window.dataSdk) {
-          await window.dataSdk.update(item);
-        }
-        // Update quantity display immediately
-        const qtySpan = document.getElementById(`qty-${itemId}`);
-        if (qtySpan) {
-          qtySpan.textContent = newQty;
-        }
-      }
-    }
+// ---------------- LOAD CATEGORIES ----------------
+async function loadCategories(){
+const {data} = await sb
+.from("categories")
+.select("*")
+.eq("restaurant_id",restaurantId);
 
-    async function addToCart(itemId, itemName, price) {
-      if (cartData.length >= 999) {
-        showToast('Cart limit reached!');
-        return;
-      }
+let html = <button onclick="selectCategory('all')" class="glass-card px-3 py-2 text-sm">All</button>;
 
-      const existing = cartData.find(item => item.item_id === itemId);
-      
-      if (existing) {
-        existing.quantity += 1;
-        if (window.dataSdk) {
-          const result = await window.dataSdk.update(existing);
-          if (!result.isOk) {
-            showToast('Failed to update cart');
-            return;
-          }
-        }
-      } else {
-        const newItem = {
-          item_id: itemId,
-          item_name: itemName,
-          quantity: 1,
-          price: price,
-          added_at: new Date().toISOString()
-        };
-        
-        if (window.dataSdk) {
-          const result = await window.dataSdk.create(newItem);
-          if (!result.isOk) {
-            showToast('Failed to add to cart');
-            return;
-          }
-        }
-      }
-      
-      showToast(`${itemName} added!`);
-    }
+data.forEach(cat=>{
+html += <button onclick="selectCategory('${cat.id}')" class="glass-card px-3 py-2 text-sm">${cat.name}</button>;
+});
 
-    async function updateQuantity(backendId, delta) {
-      const item = cartData.find(i => i.__backendId === backendId);
-      if (!item) return;
+document.getElementById("categoryContainer").innerHTML = html;
+}
 
-      const newQty = item.quantity + delta;
-      
-      if (newQty <= 0) {
-        if (window.dataSdk) {
-          const result = await window.dataSdk.delete(item);
-          if (!result.isOk) {
-            showToast('Failed to remove item');
-          }
-        }
-      } else {
-        item.quantity = newQty;
-        if (window.dataSdk) {
-          const result = await window.dataSdk.update(item);
-          if (!result.isOk) {
-            showToast('Failed to update quantity');
-          }
-        }
-      }
-    }
+// ---------------- LOAD MENU ----------------
+async function loadMenu(){
 
-    function updateCartUI() {
-      const cartBtn = document.getElementById('cartBtn');
-      const cartBadge = document.getElementById('cartBadge');
-      const cartItems = document.getElementById('cartItems');
-      const cartTotal = document.getElementById('cartTotal');
-      
-      const totalItems = cartData.reduce((sum, item) => sum + item.quantity, 0);
-      const totalPrice = cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      
-      cartBadge.textContent = totalItems;
-      cartBtn.style.display = totalItems > 0 ? 'flex' : 'none';
-      cartTotal.textContent = `₹${totalPrice}`;
-      
-      if (cartData.length === 0) {
-        cartItems.innerHTML = `
-          <div class="py-8 text-center">
-            <span class="text-4xl mb-3 block">🛒</span>
-            <p class="text-white/60">Your cart is empty</p>
-          </div>
-        `;
-      } else {
-        cartItems.innerHTML = cartData.map(item => `
-          <div class="flex items-center gap-3 glass-card rounded-xl p-3">
-            <div class="flex-1">
-              <h4 class="text-white font-medium text-sm">${item.item_name}</h4>
-              <p class="text-xs font-numbers" style="color: var(--text-muted);">₹${item.price} each</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button class="quantity-btn w-7 h-7 rounded-lg glass-card text-white text-sm font-bold" onclick="updateQuantity('${item.__backendId}', -1)">−</button>
-              <span class="text-white font-numbers font-semibold w-6 text-center">${item.quantity}</span>
-              <button class="quantity-btn w-7 h-7 rounded-lg glass-card text-white text-sm font-bold" onclick="updateQuantity('${item.__backendId}', 1)">+</button>
-            </div>
-            <span class="text-white font-numbers font-bold">₹${item.price * item.quantity}</span>
-          </div>
-        `).join('');
-      }
-    }
+let query = sb
+.from("menu_items")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.eq("available",true);
 
-    function toggleCart() {
-      const panel = document.getElementById('cartPanel');
-      panel.classList.toggle('open');
-    }
+if(activeCategory !== "all"){
+query = query.eq("category_id",activeCategory);
+}
 
-    async function checkout() {
-      if (cartData.length === 0) {
-        showToast('Cart is empty!');
-        return;
-      }
-      
-      const btn = document.getElementById('checkoutBtn');
-      btn.innerHTML = '<span class="shimmer w-full h-full absolute inset-0 rounded-xl"></span><span>Processing...</span>';
-      btn.disabled = true;
-      
-      // Clear cart
-      for (const item of cartData) {
-        if (window.dataSdk) {
-          await window.dataSdk.delete(item);
-        }
-      }
-      
-      setTimeout(() => {
-        btn.innerHTML = '<span>Place Order</span><span>→</span>';
-        btn.disabled = false;
-        toggleCart();
-        showToast('Order placed successfully! 🎉');
-      }, 1500);
-    }
+const {data} = await query;
 
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toastMessage').textContent = message;
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(-50%) translateY(0)';
-      
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(-20px)';
-      }, 2500);
-    }
+let filtered = data;
 
-    function switchOrderType(type) {
-      orderType = type;
-      const dineInTab = document.getElementById('dineInTab');
-      const onlineTab = document.getElementById('onlineTab');
-      const tableDisplay = document.getElementById('tableDisplay');
-      
-      if (type === 'dine-in') {
-        dineInTab.style.background = 'linear-gradient(135deg, #FF006E, #8B00FF)';
-        dineInTab.style.color = 'white';
-        onlineTab.style.background = 'rgba(255,255,255,0.1)';
-        onlineTab.style.color = 'rgba(255,255,255,0.6)';
-        tableDisplay.innerHTML = `🍽️ ${config.table_number || defaultConfig.table_number} <svg class="w-4 h-4 inline gradient-text" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
-      } else {
-        onlineTab.style.background = 'linear-gradient(135deg, #FF006E, #8B00FF)';
-        onlineTab.style.color = 'white';
-        dineInTab.style.background = 'rgba(255,255,255,0.1)';
-        dineInTab.style.color = 'rgba(255,255,255,0.6)';
-        if (deliveryAddress) {
-          tableDisplay.innerHTML = `📍 ${deliveryAddress.name} <svg class="w-4 h-4 inline gradient-text" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
-        } else {
-          tableDisplay.innerHTML = `📍 Add Address <svg class="w-4 h-4 inline gradient-text" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
-        }
-      }
-    }
+if(searchText){
+filtered = filtered.filter(i => i.name.toLowerCase().includes(searchText.toLowerCase()));
+}
 
-    function openAddressModal() {
-      if (orderType !== 'online') return;
-      
-      const modal = document.createElement('div');
-      modal.id = 'addressModal';
-      modal.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(5px);
-        z-index: 100;
-        display: flex;
-        align-items: flex-end;
-      `;
-      
-      modal.innerHTML = `
-        <div style="width: 100%; background: linear-gradient(180deg, #1A0030 0%, #0D001A 100%); border-radius: 24px 24px 0 0; padding: 20px; border-top: 1px solid rgba(255,105,180,0.3);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="color: white; font-weight: 600; font-size: 18px;">Add Delivery Address</h3>
-            <button onclick="document.getElementById('addressModal').remove()" style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px;">✕</button>
-          </div>
-          
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 6px;">Name</label>
-            <input id="nameInput" type="text" placeholder="Your name" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,105,180,0.2); border-radius: 12px; color: white; font-size: 14px; box-sizing: border-box;">
-          </div>
-          
-          <div style="margin-bottom: 16px;">
-            <label style="display: block; color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 6px;">Address</label>
-            <textarea id="addressInput" placeholder="Enter your delivery address" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,105,180,0.2); border-radius: 12px; color: white; font-size: 14px; box-sizing: border-box; resize: none; height: 80px; font-family: Poppins, sans-serif;"></textarea>
-          </div>
-          
-          <button id="locationBtn" onclick="fetchCurrentLocation()" style="width: 100%; padding: 12px; background: rgba(0, 212, 255, 0.15); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 12px; color: #00D4FF; font-weight: 600; cursor: pointer; margin-bottom: 12px; transition: all 0.3s;">
-            📍 Use Current Location
-          </button>
-          
-          <button onclick="saveAddress()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #FF006E, #8B00FF); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer;">
-            Save Address
-          </button>
-        </div>
-      `;
-      
-      document.body.appendChild(modal);
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-      });
-    }
+let html = "";
 
-    function saveAddress() {
-      const name = document.getElementById('nameInput').value.trim();
-      const address = document.getElementById('addressInput').value.trim();
-      
-      if (!name || !address) {
-        showToast('Please fill all fields');
-        return;
-      }
-      
-      deliveryAddress = { name, address };
-      document.getElementById('addressModal').remove();
-      
-      const tableDisplay = document.getElementById('tableDisplay');
-      tableDisplay.innerHTML = `📍 ${name} <svg class="w-4 h-4 inline gradient-text" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
-      
-      showToast('Address saved!');
-    }
+filtered.forEach(item=>{
+html += `
+<div class="glass-card p-3 food-card">
+<img src="${item.image || ''}" class="w-full h-28 object-cover rounded-xl mb-2">
+<h4 class="font-semibold text-sm">${item.name}</h4>
+<p class="text-xs text-white/60">₹${item.price}</p>
+<button onclick="addToCart('${item.id}','${item.name}',${item.price})" class="btn-gradient w-full mt-2 p-2 rounded-lg text-sm">Add</button>
+</div>
+`;
+});
 
-    function fetchCurrentLocation() {
-      const btn = document.getElementById('locationBtn');
-      btn.textContent = '⏳ Fetching...';
-      btn.disabled = true;
-      
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            document.getElementById('addressInput').value = `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`;
-            btn.textContent = '📍 Use Current Location';
-            btn.disabled = false;
-            showToast('Location fetched!');
-          },
-          () => {
-            btn.textContent = '📍 Use Current Location';
-            btn.disabled = false;
-            showToast('Could not get location');
-          }
-        );
-      }
-    }
+document.getElementById("menuContainer").innerHTML = html;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Update tableDisplay click to open address modal for online orders
-      const tableDisplay = document.getElementById('tableDisplay');
-      tableDisplay.addEventListener('click', () => {
-        if (orderType === 'online') {
-          openAddressModal();
-        }
-      });
-    });
+}
 
-    // Start app
-    init();
-  </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d40b28842bd3e74',t:'MTc3MjEyMjA2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+// ---------------- SEARCH ----------------
+document.getElementById("searchInput").addEventListener("input",(e)=>{
+searchText = e.target.value;
+loadMenu();
+});
+
+// ---------------- CATEGORY SELECT ----------------
+function selectCategory(id){
+activeCategory = id;
+loadMenu();
+}
+
+// ---------------- CART ----------------
+function addToCart(id,name,price){
+let existing = cart.find(i=>i.id===id);
+if(existing){
+existing.qty++;
+}else{
+cart.push({id,name,price,qty:1});
+}
+updateCartUI();
+}
+
+function updateCartUI(){
+if(cart.length>0){
+document.getElementById("cartBtn").classList.remove("hidden");
+}else{
+document.getElementById("cartBtn").classList.add("hidden");
+}
+
+let html="";
+let total=0;
+
+cart.forEach(item=>{
+total+=item.price*item.qty;
+html+=`
+<div class="flex justify-between mb-2">
+<span>${item.name} x${item.qty}</span>
+<span>₹${item.price*item.qty}</span>
+</div>
+`;
+});
+
+document.getElementById("cartItems").innerHTML=html;
+document.getElementById("cartTotal").innerText="₹"+total;
+}
+
+// ---------------- TOGGLE CART ----------------
+function toggleCart(){
+document.getElementById("cartPanel").classList.toggle("hidden");
+}
+
+// ---------------- ORDER TYPE ----------------
+function switchType(type){
+orderType = type;
+if(type==="delivery"){
+document.getElementById("tableDisplay").innerText="Delivery Order";
+}
+}
+
+// ---------------- PLACE ORDER ----------------
+async function placeOrder(){
+
+if(cart.length===0) return;
+
+let orderData = {
+restaurant_id: restaurantId,
+table_number: orderType==="dine" ? tableNumber : null,
+order_type: orderType==="dine" ? "dine_in" : "delivery",
+status: "pending"
+};
+
+const {data:order} = await sb
+.from("orders")
+.insert(orderData)
+.select()
+.single();
+
+for(const item of cart){
+await sb.from("order_items").insert({
+order_id:order.id,
+menu_item_id:item.id,
+name:item.name,
+price:item.price,
+quantity:item.qty
+});
+}
+
+alert("Order placed!");
+cart=[];
+updateCartUI();
+toggleCart();
+}
+
+// ---------------- INIT ----------------
+detectParams();
+loadRestaurant();
+
+</script>
+
+<script>
+
+// ---------------- BANNER ----------------
+function loadBanner(){
+document.getElementById("bannerContainer").innerHTML = `
+<div class="glass-card p-5 mb-4" style="background:linear-gradient(135deg,#FF006E,#8B00FF);">
+<h2 class="text-xl font-bold">🔥 Special Offer</h2>
+<p class="text-sm text-white/80">Order now & get instant discount</p>
+</div>
+`;
+}
+loadBanner();
+
+
+// ---------------- DELIVERY ADDRESS MODAL ----------------
+function openAddressModal(){
+
+if(orderType!=="delivery") return;
+
+let modal = document.createElement("div");
+modal.style.position="fixed";
+modal.style.inset="0";
+modal.style.background="rgba(0,0,0,0.7)";
+modal.style.display="flex";
+modal.style.alignItems="center";
+modal.style.justifyContent="center";
+
+modal.innerHTML=`
+<div class="bg-[#1A0030] p-5 rounded-2xl w-[90%] max-w-md">
+<h3 class="mb-3 font-semibold">Delivery Details</h3>
+<input id="custName" placeholder="Name" class="w-full p-2 mb-2 rounded bg-white/10">
+<input id="custPhone" placeholder="Phone" class="w-full p-2 mb-2 rounded bg-white/10">
+<textarea id="custAddress" placeholder="Address" class="w-full p-2 mb-3 rounded bg-white/10"></textarea>
+<button onclick="saveAddress()" class="w-full btn-gradient p-2 rounded-xl">Save</button>
+</div>
+`;
+
+document.body.appendChild(modal);
+modal.onclick=(e)=>{if(e.target===modal) modal.remove();}
+}
+
+let deliveryDetails=null;
+
+function saveAddress(){
+deliveryDetails={
+name:document.getElementById("custName").value,
+phone:document.getElementById("custPhone").value,
+address:document.getElementById("custAddress").value
+};
+document.querySelector("body > div:last-child").remove();
+alert("Address Saved");
+}
+
+
+// ---------------- TABLE MERGE LOGIC ----------------
+async function getActiveTableOrder(){
+
+if(orderType!=="dine") return null;
+
+const {data} = await sb
+.from("orders")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.eq("table_number",tableNumber)
+.neq("status","billed")
+.limit(1);
+
+return data.length>0 ? data[0] : null;
+}
+
+
+// ---------------- UPDATED PLACE ORDER ----------------
+async function placeOrder(){
+
+if(cart.length===0) return;
+
+let existingOrder = await getActiveTableOrder();
+
+let orderId;
+
+if(existingOrder){
+orderId = existingOrder.id;
+}else{
+
+let orderData = {
+restaurant_id: restaurantId,
+table_number: orderType==="dine" ? tableNumber : null,
+order_type: orderType==="dine" ? "dine_in" : "delivery",
+customer_name: orderType==="delivery" ? deliveryDetails?.name : null,
+phone: orderType==="delivery" ? deliveryDetails?.phone : null,
+address: orderType==="delivery" ? deliveryDetails?.address : null,
+status:"pending"
+};
+
+const {data:order} = await sb
+.from("orders")
+.insert(orderData)
+.select()
+.single();
+
+orderId = order.id;
+}
+
+// Insert items
+for(const item of cart){
+await sb.from("order_items").insert({
+order_id:orderId,
+menu_item_id:item.id,
+name:item.name,
+price:item.price,
+quantity:item.qty
+});
+}
+
+alert("Order Placed Successfully!");
+
+cart=[];
+updateCartUI();
+toggleCart();
+}
+
+
+// ---------------- ADDRESS CLICK ENABLE ----------------
+document.getElementById("tableDisplay").addEventListener("click",()=>{
+if(orderType==="delivery"){
+openAddressModal();
+}
+});
+
+</script>
+
+</main>
+</body>
 </html>
