@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--bg-primary:linear-gradient(135deg,#0D001A 0%,#1A0030 50%,#000D1A 100%);
+--pink-hot:#FF006E;
+--blue-electric:#00D4FF;
+--purple-mid:#8B00FF;
+--card-glass:rgba(255,255,255,0.06);
+--card-border:rgba(255,105,180,0.2);
+}
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:var(--bg-primary);
+color:white;
+}
+
+.glass-card{
+background:var(--card-glass);
+border:1px solid var(--card-border);
+backdrop-filter:blur(20px);
+border-radius:16px;
+}
+
+.btn-gradient{
+background:linear-gradient(135deg,var(--pink-hot),var(--purple-mid));
+}
+
+.section{
+display:none;
+}
+
+.section.active{
+display:block;
+}
+
+.stat-card{
+background:linear-gradient(135deg,rgba(255,0,110,0.15),rgba(0,212,255,0.15));
+border:1px solid rgba(255,105,180,0.3);
+}
+</style>
+</head>
+
+<body>
+
+<header class="p-4 border-b border-pink-500/30 backdrop-blur-lg">
+<div class="flex justify-between items-center max-w-6xl mx-auto">
+<h1 class="text-xl font-semibold">🚀 Admin Dashboard</h1>
+<div id="restaurantName" class="text-sm text-white/60"></div>
+</div>
+</header>
+
+<div class="flex max-w-6xl mx-auto">
+
+<!-- SIDEBAR -->
+<aside class="w-60 p-4 border-r border-pink-500/20 hidden md:block">
+<button onclick="showSection('ordersSection')" class="w-full mb-2 p-2 glass-card">Live Orders</button>
+<button onclick="showSection('billingSection')" class="w-full mb-2 p-2 glass-card">Billing</button>
+<button onclick="showSection('menuSection')" class="w-full mb-2 p-2 glass-card">Menu Management</button>
+<button onclick="showSection('revenueSection')" class="w-full mb-2 p-2 glass-card">Revenue</button>
+<button onclick="showSection('historySection')" class="w-full mb-2 p-2 glass-card">Order History</button>
+</aside>
+
+<main class="flex-1 p-6">
+
+<!-- STATS -->
+<div class="grid md:grid-cols-3 gap-4 mb-6">
+<div class="stat-card p-4 rounded-xl">
+<p class="text-sm text-white/60">Today's Orders</p>
+<h2 id="todayOrders" class="text-2xl font-bold">0</h2>
+</div>
+<div class="stat-card p-4 rounded-xl">
+<p class="text-sm text-white/60">Today's Revenue</p>
+<h2 id="todayRevenue" class="text-2xl font-bold">₹0</h2>
+</div>
+<div class="stat-card p-4 rounded-xl">
+<p class="text-sm text-white/60">Pending Orders</p>
+<h2 id="pendingCount" class="text-2xl font-bold">0</h2>
+</div>
+</div>
+
+<!-- LIVE ORDERS -->
+<section id="ordersSection" class="section active">
+<h2 class="text-lg font-semibold mb-4">Live Orders</h2>
+<div id="liveOrders" class="grid md:grid-cols-2 gap-4"></div>
+</section>
+
+<!-- BILLING -->
+<section id="billingSection" class="section">
+<h2 class="text-lg font-semibold mb-4">Generate Bill</h2>
+<input id="billTableNumber" placeholder="Enter Table Number" class="p-2 bg-white/10 rounded mb-3">
+<button onclick="generateBill()" class="btn-gradient p-2 rounded">Generate</button>
+<div id="billPreview" class="mt-4"></div>
+</section>
+
+<!-- MENU MANAGEMENT -->
+<section id="menuSection" class="section">
+<h2 class="text-lg font-semibold mb-4">Menu Management</h2>
+
+<div class="glass-card p-4 mb-4">
+<input id="newCategory" placeholder="New Category Name" class="p-2 bg-white/10 rounded">
+<button onclick="addCategory()" class="btn-gradient p-2 rounded ml-2">Add Category</button>
+</div>
+
+<div class="glass-card p-4 mb-4">
+<input id="dishName" placeholder="Dish Name" class="p-2 bg-white/10 rounded mb-2 w-full">
+<input id="dishPrice" placeholder="Price" type="number" class="p-2 bg-white/10 rounded mb-2 w-full">
+<input id="dishImage" placeholder="Image URL" class="p-2 bg-white/10 rounded mb-2 w-full">
+<select id="dishCategory" class="p-2 bg-white/10 rounded mb-2 w-full"></select>
+<button onclick="addDish()" class="btn-gradient p-2 rounded w-full">Add Dish</button>
+</div>
+
+<div id="menuList"></div>
+
+</section>
+
+<!-- REVENUE -->
+<section id="revenueSection" class="section">
+<h2 class="text-lg font-semibold mb-4">Revenue Analytics</h2>
+
+<select id="revenueFilter" onchange="loadRevenue()" class="p-2 bg-white/10 rounded mb-3">
+<option value="today">Today</option>
+<option value="week">This Week</option>
+<option value="month">This Month</option>
+</select>
+
+<div id="revenueData"></div>
+</section>
+
+<!-- HISTORY -->
+<section id="historySection" class="section">
+<h2 class="text-lg font-semibold mb-4">Order History</h2>
+
+<input type="date" id="historyDate" onchange="loadHistory()" class="p-2 bg-white/10 rounded mb-3">
+<div id="historyList"></div>
+
+</section>
+
+</main>
+</div>
+
+<script>
+
+// ⚠️ Replace with your keys
+const SUPABASE_URL="YOUR_SUPABASE_URL";
+const SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY";
+
+const sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let restaurantId=null;
+let slug=null;
+
+function showSection(id){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+// URL detect
+const params=new URLSearchParams(window.location.search);
+slug=params.get("slug");
+
+async function initDashboard(){
+
+if(!slug){
+alert("Missing slug");
+return;
+}
+
+const {data}=await sb.from("restaurants").select("*").eq("slug",slug).single();
+restaurantId=data.id;
+document.getElementById("restaurantName").innerText=data.name;
+
+loadStats();
+loadLiveOrders();
+loadCategories();
+loadMenuList();
+}
+
+async function loadStats(){
+
+// Today's orders
+const today = new Date();
+today.setHours(0,0,0,0);
+
+const {data:todayOrdersData} = await sb
+.from("orders")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.gte("created_at",today.toISOString());
+
+document.getElementById("todayOrders").innerText = todayOrdersData.length;
+
+// Today's revenue
+let revenue=0;
+todayOrdersData.forEach(o=>{
+if(o.status==="billed"){
+revenue+=o.total_amount || 0;
+}
+});
+
+document.getElementById("todayRevenue").innerText="₹"+revenue;
+
+// Pending count
+const pending = todayOrdersData.filter(o=>o.status==="pending");
+document.getElementById("pendingCount").innerText=pending.length;
+
+}
+
+
+// ---------------- LIVE ORDERS ----------------
+async function loadLiveOrders(){
+
+const {data} = await sb
+.from("orders")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.in("status",["pending","served"])
+.order("created_at",{ascending:false});
+
+let html="";
+
+for(const order of data){
+
+// fetch items
+const {data:items} = await sb
+.from("order_items")
+.select("*")
+.eq("order_id",order.id);
+
+let itemsHTML="";
+let total=0;
+
+items.forEach(i=>{
+itemsHTML+=`${i.name} x${i.quantity}<br>`;
+total+=i.price*i.quantity;
+});
+
+html+=`
+<div class="glass-card p-4">
+<h4 class="font-semibold mb-2">
+${order.order_type==="delivery" ? "🛵 Delivery" : "🍽️ Table "+order.table_number}
+</h4>
+
+<div class="text-sm text-white/70 mb-2">
+${itemsHTML}
+</div>
+
+<p class="mb-2">Total: ₹${total}</p>
+
+<div class="flex gap-2">
+
+${order.status==="pending" ? 
+<button onclick="updateStatus('${order.id}','served')" class="btn-gradient px-3 py-1 rounded text-sm">Mark Served</button> : ""}
+
+<button onclick="markBilled('${order.id}',${total})" class="bg-green-600 px-3 py-1 rounded text-sm">Billed</button>
+
+</div>
+</div>
+`;
+}
+
+document.getElementById("liveOrders").innerHTML=html;
+
+}
+
+
+// ---------------- UPDATE STATUS ----------------
+async function updateStatus(orderId,status){
+await sb.from("orders").update({status}).eq("id",orderId);
+loadLiveOrders();
+loadStats();
+}
+
+
+// ---------------- MARK BILLED ----------------
+async function markBilled(orderId,total){
+
+await sb.from("orders")
+.update({
+status:"billed",
+total_amount:total
+})
+.eq("id",orderId);
+
+loadLiveOrders();
+loadStats();
+}
+
+
+// ---------------- GENERATE BILL ----------------
+async function generateBill(){
+
+const 
+table=document.getElementById("billTableNumber").value;
+if(!table) return;
+
+const {data:orders} = await sb
+.from("orders")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.eq("table_number",table)
+.eq("status","billed");
+
+if(!orders || orders.length===0){
+document.getElementById("billPreview").innerHTML="No billed orders";
+return;
+}
+
+let total=0;
+let html="<div class='glass-card p-4'>";
+
+for(const order of orders){
+
+const {data:items} = await sb
+.from("order_items")
+.select("*")
+.eq("order_id",order.id);
+
+items.forEach(i=>{
+html += `${i.name} x${i.quantity} - ₹${i.price*i.quantity}<br>`;
+total += i.price*i.quantity;
+});
+
+}
+
+html += `<hr class="my-2">Total: ₹${total}</div>`;
+document.getElementById("billPreview").innerHTML=html;
+}
+
+
+// Auto refresh every 8 seconds
+setInterval(()=>{
+if(restaurantId){
+loadLiveOrders();
+loadStats();
+}
+},8000);
+
+
+// ---------------- LOAD CATEGORIES ----------------
+async function loadCategories(){
+
+const {data} = await sb
+.from("categories")
+.select("*")
+.eq("restaurant_id",restaurantId);
+
+let options="";
+data.forEach(cat=>{
+options +=` <option value="${cat.id}">${cat.name}</option>`;
+});
+
+document.getElementById("dishCategory").innerHTML=options;
+}
+
+
+// ---------------- ADD CATEGORY ----------------
+async function addCategory(){
+
+const name=document.getElementById("newCategory").value;
+if(!name) return;
+
+await sb.from("categories").insert({
+restaurant_id:restaurantId,
+name:name
+});
+
+document.getElementById("newCategory").value="";
+loadCategories();
+}
+
+
+// ---------------- ADD DISH ----------------
+async function addDish(){
+
+const name=document.getElementById("dishName").value;
+const price=document.getElementById("dishPrice").value;
+const image=document.getElementById("dishImage").value;
+const category=document.getElementById("dishCategory").value;
+
+if(!name || !price) return;
+
+await sb.from("menu_items").insert({
+restaurant_id:restaurantId,
+name:name,
+price:price,
+image:image,
+category_id:category,
+available:true
+});
+
+document.getElementById("dishName").value="";
+document.getElementById("dishPrice").value="";
+document.getElementById("dishImage").value="";
+
+loadMenuList();
+}
+
+
+// ---------------- LOAD MENU LIST ----------------
+async function loadMenuList(){
+
+const {data} = await sb
+.from("menu_items")
+.select("*, categories(name)")
+.eq("restaurant_id",restaurantId);
+
+let html="";
+
+data.forEach(item=>{
+html+=`
+<div class="glass-card p-3 mb-3 flex justify-between items-center">
+<div>
+<h4 class="font-semibold">${item.name}</h4>
+<p class="text-sm text-white/60">
+₹${item.price} • ${item.categories?.name || ""}
+</p>
+</div>
+<button onclick="deleteDish('${item.id}')" class="bg-red-600 px-3 py-1 rounded text-sm">
+Delete
+</button>
+</div>
+`;
+});
+
+document.getElementById("menuList").innerHTML=html;
+}
+
+
+// ---------------- DELETE DISH ----------------
+async function deleteDish(id){
+await sb.from("menu_items").delete().eq("id",id);
+loadMenuList();
+}
+
+
+// ---------------- REVENUE FILTER ----------------
+async function loadRevenue(){
+
+const filter=document.getElementById("revenueFilter").value;
+let startDate=new Date();
+
+if(filter==="today"){
+startDate.setHours(0,0,0,0);
+}
+if(filter==="week"){
+startDate.setDate(startDate.getDate()-7);
+}
+if(filter==="month"){
+startDate.setMonth(startDate.getMonth()-1);
+}
+
+const {data} = await sb
+.from("orders")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.eq("status","billed")
+.gte("created_at",startDate.toISOString());
+
+let total=0;
+data.forEach(o=> total+=o.total_amount || 0);
+
+document.getElementById("revenueData").innerHTML =
+<div class="glass-card p-4">Total Revenue: ₹${total}</div>;
+}
+
+
+// ---------------- ORDER HISTORY ----------------
+async function loadHistory(){
+
+const date=document.getElementById("historyDate").value;
+if(!date) return;
+
+const start=new Date(date);
+start.setHours(0,0,0,0);
+
+const end=new Date(date);
+end.setHours(23,59,59,999);
+
+const {data} = await sb
+.from("orders")
+.select("*")
+.eq("restaurant_id",restaurantId)
+.gte("created_at",start.toISOString())
+.lte("created_at",end.toISOString())
+.order("created_at",{ascending:false});
+
+let html="";
+
+data.forEach(o=>{
+html+=`
+<div class="glass-card p-3 mb-3">
+${o.order_type==="delivery" ? "🛵 Delivery" : "🍽️ Table "+o.table_number}
+<br>
+Status: ${o.status}
+<br>
+₹${o.total_amount || 0}
+</div>
+`;
+});
+
+document.getElementById("historyList").innerHTML=html;
+}
+
+
+// ---------------- INIT CALL ----------------
+initDashboard();
+
+</script>
+
+</main>
+</div>
+
+</body>
+</html>
